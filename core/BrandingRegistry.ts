@@ -1,7 +1,7 @@
 import { defineAsyncComponent } from 'vue';
 
 export const BRANDING_REGISTRY: Record<string, any> = {
-    
+
     HeaderClassic: {
         label: '🏛️ Institucional Clásico',
         icon: 'las la-university',
@@ -17,7 +17,7 @@ export const BRANDING_REGISTRY: Record<string, any> = {
         }
     },
 
-    
+
     HeaderClassicV1: {
         label: '🏛️ Institucional Clásico V1',
         icon: 'las la-school',
@@ -29,7 +29,7 @@ export const BRANDING_REGISTRY: Record<string, any> = {
             logoHeightScrolled: 45,
             sticky: true,
             isTransparent: false,
-            
+
             backdropBlur: 10,
             showTopBar: true,
             topBarBgColor: '#003366',
@@ -50,7 +50,7 @@ export const BRANDING_REGISTRY: Record<string, any> = {
             ctaText: 'POSTULA AQUÍ',
             ctaUrl: '#',
             ctaIcon: 'bi bi-arrow-right-circle',
-            
+
             menuId: null
         }
     },
@@ -69,46 +69,65 @@ export const BRANDING_REGISTRY: Record<string, any> = {
         }
     },
 
-    
+
     FooterPro: {
-        label: '🏁 Footer Institucional Pro',
+        label: '🏁 Footer Institucional Pro (Azul RiesGIRD)',
         icon: 'las la-shoe-prints',
         component: defineAsyncComponent(() => import('../components/branding/footer/previews/FooterPro.vue')),
         editor: defineAsyncComponent(() => import('../components/branding/footer/updates/FooterProEditor.vue')),
         initialData: {
-            logoUrl: '',
+            logoUrl: '/img.png',
             logoHeight: 60,
-            description: 'Institución líder enfocada en la excelencia académica y la formación integral.',
-            bgColor: '#1a1a1a',
-            textColor: '#ffffff',
-            accentColor: '#cc0033',
-            address: 'Av. Universitaria 123, Lima - Perú',
-            phone: '+51 1 123 4567',
-            email: 'contacto@universidad.edu.pe',
-            socialLinks: [
-                { icon: 'bi bi-facebook', url: '#' },
-                { icon: 'bi bi-linkedin', url: '#' },
-                { icon: 'bi bi-instagram', url: '#' }
-            ],
+            description: 'Institución líder enfocada en la excelencia académica, la gestión del riesgo y la formación integral.',
+            bgColor: '#1e40af',
+            textColor: '#e0f2fe',
+            accentColor: '#ffffff',
+            bulletColor: '#93c5fd',
+            bottomBgColor: '#173287',
+            bottomTextColor: '#93c5fd',
+            copyrightText: 'Riesgird - ACC | Todos los derechos reservados.',
             footerColumns: [
                 {
-                    title: 'Institución',
+                    title: 'Organización',
                     links: [
-                        { text: 'Sobre nosotros', url: '#' },
-                        { text: 'Transparencia', url: '#' },
-                        { text: 'Noticias', url: '#' }
+                        { text: 'RED', url: '/' },
+                        { text: '¿Qué es la Red?', url: '/organizacion' },
+                        { text: 'Estructura organizacional', url: '/estructuraOrganizacional' },
+                        { text: 'Proceso y requisito de membresía', url: '/procesoMembresia' }
                     ]
                 },
                 {
-                    title: 'Admisión',
+                    title: 'Líneas de acción',
                     links: [
-                        { text: 'Pregrado', url: '#' },
-                        { text: 'Posgrado', url: '#' },
-                        { text: 'Becas', url: '#' }
+                        { text: 'Investigación', url: '/investigacionesProducidas' },
+                        { text: 'Formación', url: '/estrategiaTransversalizacion' },
+                        { text: 'Responsabilidad socio ambiental', url: '/servicioDesarrolloTerritorial' }
+                    ]
+                },
+                {
+                    title: 'Eventos y noticias',
+                    links: [
+                        { text: 'Noticias', url: '/eventosNoticias' },
+                        { text: 'Convocatorias', url: '/noticiasConvocatorias' }
+                    ]
+                },
+                {
+                    title: 'Miembros',
+                    links: [
+                        { text: 'Directorio', url: '/directorio' },
+                        { text: 'Universidades', url: '/universidades' }
+                    ]
+                },
+                {
+                    title: 'Documentos',
+                    links: [
+                        { text: 'Memorias', url: '/memoriasCongreso' },
+                        { text: 'Documentos y Gestión', url: '/gestionConocimiento' },
+                        { text: 'Investigaciones', url: '/investigacionesProducidas' },
+                        { text: 'Presencia Riesgird', url: '/presenciaRed' }
                     ]
                 }
-            ],
-            copyrightText: `© ${new Date().getFullYear()} Universidad. Todos los derechos reservados.`
+            ]
         }
     },
     FooterSimple: {
@@ -117,10 +136,10 @@ export const BRANDING_REGISTRY: Record<string, any> = {
         component: defineAsyncComponent(() => import('../components/branding/footer/previews/FooterSimple.vue')),
         editor: defineAsyncComponent(() => import('../components/branding/footer/updates/FooterSimpleEditor.vue')),
         initialData: {
-            bgColor: '#1e1e1e', 
-            textColor: '#7e7e7e', 
-            linkColor: '#9ba8b5', 
-            iconColor: '#ffffff', 
+            bgColor: '#1e1e1e',
+            textColor: '#7e7e7e',
+            linkColor: '#9ba8b5',
+            iconColor: '#ffffff',
             links: [
                 { text: 'Blog UE', url: '#' },
                 { text: 'UE Virtual', url: '#' },
@@ -130,7 +149,7 @@ export const BRANDING_REGISTRY: Record<string, any> = {
             ],
             copyrightText: 'Universidad ESAN - R.U.C N° 20136507720',
             socialLinks: [
-                { icon: 'bi bi-twitter-x', url: '#' }, 
+                { icon: 'bi bi-twitter-x', url: '#' },
                 { icon: 'bi bi-facebook', url: '#' },
                 { icon: 'bi bi-youtube', url: '#' },
                 { icon: 'bi bi-instagram', url: '#' }

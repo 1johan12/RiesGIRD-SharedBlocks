@@ -77,7 +77,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { formatImageUrl } from '@shared/helpers/url';
+import { formatImageUrl } from '../../../helpers/url';
 
 const props = defineProps({
     data: { type: Object, required: true }

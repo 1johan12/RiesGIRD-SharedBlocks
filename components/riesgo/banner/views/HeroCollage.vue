@@ -1,191 +1,179 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 const props = defineProps<{
   data: any
-}>();
+}>()
 
+const title = computed(() => props.data?.title || '')
+const logoUrl = computed(() => props.data?.logoUrl || '')
 
-const title = computed(() => props.data?.title || '');
-const logoUrl = computed(() => props.data?.logoUrl || '/placeholder-logo.png');
+// Usamos la propiedad superior (o puedes cambiarla por una nueva variable si el backend cambia) como la imagen única del collage
+const collageUrl = computed(() => props.data?.collageImagenes?.superior || '')
 
-
-const collage = computed(() => ({
-  superior: props.data?.collageImagenes?.superior || '/placeholder-img.png',
-  izquierda: props.data?.collageImagenes?.izquierda || '/placeholder-img.png',
-  centroAbajo: props.data?.collageImagenes?.centroAbajo || '/placeholder-img.png',
-  derecha: props.data?.collageImagenes?.derecha || '/placeholder-img.png'
-}));
+const formatImageUrl = (url: string | undefined): string => {
+  if (!url) return ''
+  if (url.startsWith('http') || url.startsWith('data:')) return url
+  return `http://127.0.0.1:4000/storage/${url}`
+}
 </script>
 
 <template>
   <section class="hero-section">
     <div class="hero-container">
-      
       <div class="hero-text-block">
-        <h1 class="hero-title" v-if="title">
+        <h1 v-if="title" class="hero-title">
           {{ title }}
         </h1>
-        
-        <div class="hero-logo-wrapper" v-if="logoUrl">
-          <img :src="logoUrl" alt="Brand Logo" class="hero-brand-logo" />
+
+        <div v-if="logoUrl" class="hero-logo-wrapper">
+          <img
+            :src="formatImageUrl(logoUrl)"
+            alt="Brand Logo"
+            class="hero-brand-logo"
+          />
         </div>
       </div>
 
-      <div class="hero-collage-block">
-        
-        <div class="collage-item clip-top">
-          <img :src="collage.superior" alt="Imagen Superior" class="collage-img" />
-          <div class="overlay-tint"></div>
-        </div>
-
-        <div class="collage-item clip-left">
-          <img :src="collage.izquierda" alt="Imagen Izquierda" class="collage-img" />
-          <div class="overlay-tint"></div>
-        </div>
-
-        <div class="collage-item clip-center">
-          <img :src="collage.centroAbajo" alt="Imagen Centro Abajo" class="collage-img" />
-          <div class="overlay-tint"></div>
-        </div>
-
-        <div class="collage-item clip-right">
-          <img :src="collage.derecha" alt="Imagen Derecha" class="collage-img" />
-          <div class="overlay-tint"></div>
-        </div>
-
+      <div v-if="collageUrl" class="hero-collage-block" aria-hidden="true">
+        <img
+          :src="formatImageUrl(collageUrl)"
+          alt="Hero Collage"
+          class="collage-img"
+        />
       </div>
-
     </div>
   </section>
 </template>
 
 <style scoped>
-/* --- ESTILOS ESTRUCTURALES --- */
 .hero-section {
   width: 100%;
-  background-color: #ffffff;
+  background: #ffffff;
   overflow: hidden;
-  position: relative;
-  padding: 20px 0;
+  box-sizing: border-box;
+  box-shadow: rgba(0, 0, 0, 0.45) 0px 25px 20px -20px;
 }
 
 .hero-container {
-  max-width: 1300px;
+  width: 100%;
+  max-width: 1920px;
+  min-height: clamp(489px, 34vw, 670px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 45% 55%;
-  align-items: center;
-  min-height: 480px;
+  grid-template-columns: minmax(0, 670px) minmax(0, 1fr);
+  align-items: stretch;
+  box-sizing: border-box;
 }
 
-/* --- BLOQUE DE TEXTO --- */
 .hero-text-block {
-  padding: 0 40px;
+  min-width: 0;
+  padding: clamp(24px, 2vw, 44px) clamp(24px, 2.8vw, 56px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .hero-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #0c0a09;
-  line-height: 1.6;
-  margin-bottom: 35px;
-  letter-spacing: 0.3px;
+  max-width: 591px;
+  margin: 0;
+  font-family: var(--font-bricolage) !important;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.32;
+  text-transform: uppercase;
+  color: #111111;
 }
 
 .hero-logo-wrapper {
-  width: 100%;
-  max-width: 360px;
+  width: min(100%, 453px);
+  margin-top: 26px;
   display: flex;
   justify-content: center;
+  align-items: center;
 }
 
 .hero-brand-logo {
   width: 100%;
   height: auto;
+  display: block;
   object-fit: contain;
 }
 
-/* --- COLLAGE DIAGONAL CON MÁSCARAS --- */
 .hero-collage-block {
   position: relative;
-  width: 100%;
-  height: 480px;
-  background-color: #ffffff;
-}
-
-.collage-item {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  min-height: clamp(489px, 34vw, 670px);
+  background: #ffffff;
   overflow: hidden;
-  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  isolation: isolate;
 }
 
+/* ⚡ LA IMAGEN AHORA SE ADAPTA DE MANERA INTACTA SIN DEFORMARSE */
 .collage-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  filter: contrast(1.05) brightness(0.95);
+  object-fit: cover; /* Mantiene la relación de aspecto y cubre el contenedor */
+  display: block;
+  opacity: 1;
+  filter: saturate(1.02) brightness(0.98);
 }
 
-.overlay-tint {
+/* Capa blanca transparente general sobre toda la imagen si el diseño la conserva */
+/* .hero-collage-block::after {
+  content: "";
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(37, 82, 154, 0.08) 0%, rgba(219, 20, 60, 0.05) 100%);
-  mix-blend-mode: multiply;
+  inset: 0;
+  background-color: rgba(255, 255, 255, 0.5); 
+  z-index: 1;
   pointer-events: none;
-}
+} */
 
-/* --- CORTES ASIMÉTRICOS EXACTOS (CLIP-PATH) --- */
-.clip-top {
-  clip-path: polygon(0 0, 100% 0, 100% 30%, 46% 67%, 0 32%);
-  z-index: 4;
-}
-
-.clip-left {
-  clip-path: polygon(0 35%, 44% 70%, 25% 100%, 0 100%);
-  z-index: 3;
-}
-
-.clip-center {
-  clip-path: polygon(46% 73%, 76% 51%, 89% 100%, 27% 100%);
-  z-index: 2;
-}
-
-.clip-right {
-  clip-path: polygon(100% 33%, 100% 100%, 91% 100%, 78% 50%);
-  z-index: 5;
-}
-
-.collage-item:hover {
-  transform: scale(1.015);
-  z-index: 10;
-}
-
-/* --- RESPONSIVE ADAPTATION --- */
+/* ==========================================================================
+   RESPONSIVE (Control de orden fluido)
+   ========================================================================== */
 @media (max-width: 1024px) {
   .hero-container {
     grid-template-columns: 1fr;
-    gap: 40px;
   }
-  .hero-text-block { padding: 20px; }
-  .hero-title { font-size: 1.1rem; }
-  .hero-collage-block { height: 400px; }
+
+  /* Las imágenes suben arriba */
+  .hero-collage-block {
+    min-height: 400px;
+    order: 1; 
+  }
+
+  /* El texto baja */
+  .hero-text-block {
+    min-height: 220px;
+    padding: 28px 24px;
+    order: 2; 
+  }
+
+  .hero-title {
+    max-width: 720px;
+  }
 }
 
 @media (max-width: 640px) {
-  .hero-title { font-size: 1rem; }
-  .hero-collage-block { height: 300px; }
+  .hero-text-block {
+    padding: 22px 16px;
+  }
+
+  .hero-title {
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  .hero-logo-wrapper {
+    width: min(100%, 380px);
+    margin-top: 20px;
+  }
+
+  .hero-collage-block {
+    min-height: 300px;
+  }
 }
 </style>
