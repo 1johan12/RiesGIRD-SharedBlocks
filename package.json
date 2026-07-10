@@ -1,0 +1,23 @@
+{
+  "name": "shared-blocks",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@vueup/vue-quill": "^1.2.0",
+    "axios": "^1.16.0",
+    "bootstrap-vue-next": "^0.45.1",
+    "sweetalert2": "^11.26.20",
+    "swiper": "^12.1.2",
+    "vue": "^3.5.28",
+    "vue-recaptcha-v3": "^2.0.1",
+    "vue-router": "^4.6.4"
+  }
+}
