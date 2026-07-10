@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
 import HttpClient from "../../../../helpers/http-client"; 
-import { useAuthStore } from "../../../../../front/src/stores/auth"; 
-
+// import { useAuthStore } from "../../../../../front/src/stores/auth"; 
+import { useAuthStore } from '../../../../shared/auth';
 const props = defineProps<{ modelValue: any }>();
 const emit = defineEmits(['update:modelValue']);
 

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue';
 // 🔥 IMPORTS CENTRALIZADOS SOLICITADOS ASIGNADOS CORRECTAMENTE
-import { PUBLIC_API_URL } from '../../../../config/apiConfig'
-import { formatImageUrl } from '../../../../../front/src/helpers/url'
+import { PUBLIC_API_URL } from '../../../../config/apiConfig';
+import { formatImageUrl } from '../../../../shared/url';
+// import { formatImageUrl } from '../../../../../front/src/helpers/url'
 
 interface UniversityProp {
   university_id: number
