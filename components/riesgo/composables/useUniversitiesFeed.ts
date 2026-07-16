@@ -17,7 +17,7 @@ export function useUniversitiesFeed() {
   const fetchDirectorio = async (forcedType: string) => {
     pending.value = true
     try {
-      // 🎯 CORREGIDO: Como PUBLIC_API_URL ya es 'http://localhost:4000/api/public', solo concatenas el recurso
+      // 🎯 CORREGIDO: Como PUBLIC_API_URL ya es 'https://api.redgirdaccperu.edu.pe/api/public', solo concatenas el recurso
       let url = `${PUBLIC_API_URL}/universities?limit=100`
       
       if (forcedType !== 'all') {

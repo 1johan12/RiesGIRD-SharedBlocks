@@ -78,7 +78,7 @@ const fetchFeedFromFastify = async () => {
   pending.value = true
 
   try {
-    let url = `http://localhost:4000/api/public/news?limit=${limit.value}`
+    let url = `https://api.redgirdaccperu.edu.pe/api/public/news?limit=${limit.value}`
     if (postType.value !== 'all') {
       url += `&type=${postType.value}`
     }

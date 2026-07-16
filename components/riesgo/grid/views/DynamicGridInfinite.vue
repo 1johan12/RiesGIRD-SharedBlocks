@@ -81,7 +81,7 @@ const fetchFeedFromFastify = async (isAppendMode = false) => {
   }
 
   try {
-    const url = `http://localhost:4000/api/public/news?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
+    const url = `https://api.redgirdaccperu.edu.pe/api/public/news?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
     
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)

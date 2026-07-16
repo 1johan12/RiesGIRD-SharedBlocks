@@ -61,7 +61,7 @@ const aliadosFiltrados = computed(() => {
 const fetchAliadosFromFastify = async () => {
   pending.value = true
   try {
-    const url = `http://localhost:4000/api/public/partners?limit=${limit.value}`
+    const url = `https://api.redgirdaccperu.edu.pe/api/public/partners?limit=${limit.value}`
     const response = await fetch(url)
 
     if (response.ok) {

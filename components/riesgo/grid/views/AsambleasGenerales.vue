@@ -24,7 +24,7 @@ const selectedYear = ref('');
 const fetchAsambleasFromFastify = async () => {
   pending.value = true;
   try {
-    let url = `http://localhost:4000/api/public/news?limit=${limit.value}&type=${postType.value}`;
+    let url = `https://api.redgirdaccperu.edu.pe/api/public/news?limit=${limit.value}&type=${postType.value}`;
     const response = await fetch(url);
     
     if (response.ok) {

@@ -52,7 +52,7 @@ const currentSliderIndex = ref(0);
 const fetchFeedFromFastify = async () => {
   pending.value = true;
   try {
-    const url = `http://localhost:4000/api/public/news?limit=100`;
+    const url = `https://api.redgirdaccperu.edu.pe/api/public/news?limit=100`;
     const response = await fetch(url);
     if (response.ok) {
       const resData = await response.json();
@@ -100,7 +100,7 @@ if (typeof (globalThis as any).useAsyncData === 'function') {
   const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
     `megasection-feed-${blockId}`,
     async () => {
-      const url = `http://localhost:4000/api/public/news?limit=100`;
+      const url = `https://api.redgirdaccperu.edu.pe/api/public/news?limit=100`;
       const response = await fetch(url);
       if (response.ok) {
         const resData = await response.json();

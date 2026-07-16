@@ -47,7 +47,7 @@ const selectedRector = ref<RectorMember | null>(null);
 const fetchDirectorioFromFastify = async () => {
   pending.value = true;
   try {
-    const url = `http://localhost:4000/api/public/teams?hierarchy_level=1&limit=${limit.value}`;
+    const url = `https://api.redgirdaccperu.edu.pe/api/public/teams?hierarchy_level=1&limit=${limit.value}`;
     const response = await fetch(url);
     
     if (response.ok) {

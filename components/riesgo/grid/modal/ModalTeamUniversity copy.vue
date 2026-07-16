@@ -50,7 +50,7 @@ const fetchTeamFromFastify = async (universityId: number) => {
   teamMembers.value = [];
 
   try {
-    const url = `http://localhost:4000/api/public/teams?university_id=${universityId}`;
+    const url = `https://api.redgirdaccperu.edu.pe/api/public/teams?university_id=${universityId}`;
     const response = await fetch(url);
 
     if (response.ok) {
