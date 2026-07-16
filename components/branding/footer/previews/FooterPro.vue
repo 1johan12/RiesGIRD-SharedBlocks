@@ -68,8 +68,7 @@ const safeConfig = computed(() => ({
     }"
   >
     <div class="footer-container">
-      <h5 hidden>Firmado por FormalLP</h5>
-      
+      <h5 hidden>FormalLP - AgenteJ</h5>
       <div class="footer-brand-column">
         <img 
           v-if="safeConfig.logoUrl" 
@@ -98,6 +97,7 @@ const safeConfig = computed(() => ({
           </ul>
         </div>
       </div>
+      
 
     </div>
 
