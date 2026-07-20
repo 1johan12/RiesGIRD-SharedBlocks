@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import SectionTitle from '../title/SectionTitle.vue';
+import { formatImageUrl } from '@shared/helpers/url';
 const props = defineProps<{
   data: any
 }>()
@@ -13,11 +14,7 @@ const text = computed(
 )
 const imageUrl = computed(() => props.data?.imageUrl || '')
 
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
+
 </script>
 
 <template>

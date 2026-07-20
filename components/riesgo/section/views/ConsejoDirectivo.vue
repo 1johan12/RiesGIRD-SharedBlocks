@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SectionTitle from '../title/SectionTitle.vue';
-
+import { formatImageUrl } from '@shared/helpers/url';
 const props = defineProps<{
   data: any
 }>();
@@ -12,12 +12,7 @@ const introText = computed(() => props.data?.introText || 'El Consejo Directivo 
 const subtitle = computed(() => props.data?.subtitle || 'Directorio Actual (Periodo 2024 - 2027)');
 const directorio = computed(() => props.data?.directorio || []);
 
-// Helper para dar formato a fotos locales o externas si se configuran
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `http://127.0.0.1:4000/storage/${url}`;
-};
+
 </script>
 
 <template>

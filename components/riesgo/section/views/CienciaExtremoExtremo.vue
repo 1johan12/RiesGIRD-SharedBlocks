@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-
+import { formatImageUrl } from '@shared/helpers/url';
 const props = defineProps<{
   data: any
 }>()
@@ -17,12 +17,6 @@ const titleTextRef = ref<HTMLElement | null>(null)
 const underlineWidth = ref(0)
 
 let resizeObserver: ResizeObserver | null = null
-
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
 
 const calculateUnderline = async () => {
   await nextTick()

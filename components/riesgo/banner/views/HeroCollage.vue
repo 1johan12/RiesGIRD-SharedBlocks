@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatImageUrl } from '@shared/helpers/url';
 
 const props = defineProps<{
   data: any
@@ -11,11 +12,7 @@ const logoUrl = computed(() => props.data?.logoUrl || '')
 // Usamos la propiedad superior (o puedes cambiarla por una nueva variable si el backend cambia) como la imagen única del collage
 const collageUrl = computed(() => props.data?.collageImagenes?.superior || '')
 
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
+
 </script>
 
 <template>

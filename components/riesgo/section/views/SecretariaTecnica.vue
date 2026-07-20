@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import SectionTitle from '../title/SectionTitle.vue'
-
+import { formatImageUrl } from '@shared/helpers/url';
 type Leader = {
   nombre: string
   cargo: string
@@ -52,11 +52,7 @@ const committeeTitle = computed(
 
 const comite = computed<CommitteeMember[]>(() => props.data?.comite || [])
 
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
+
 </script>
 
 <template>

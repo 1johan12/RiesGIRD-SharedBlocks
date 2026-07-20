@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import SectionTitle from '../title/SectionTitle.vue';
-
+import { formatImageUrl } from '@shared/helpers/url';
 const props = defineProps<{
   data: any
 }>();
@@ -9,11 +9,7 @@ const props = defineProps<{
 const title = computed(() => props.data?.title || 'Estructura de la RiesGIRD-ACC/Perú');
 const imageUrl = computed(() => props.data?.imageUrl || '');
 
-const formatImageUrl = (url: string) => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `http://127.0.0.1:4000/storage/${url}`;
-};
+
 </script>
 
 <template>

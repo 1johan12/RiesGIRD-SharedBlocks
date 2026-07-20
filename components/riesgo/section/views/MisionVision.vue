@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatImageUrl } from '@shared/helpers/url';
 
 const props = defineProps<{
   data: any
@@ -52,7 +53,7 @@ const misionImageUrl = computed(() => props.data?.misionImageUrl || '/placeholde
 
         <div class="image-box">
           <img
-            :src="misionImageUrl"
+            :src="formatImageUrl(misionImageUrl)"
             :alt="misionTitle"
             class="info-image"
           />

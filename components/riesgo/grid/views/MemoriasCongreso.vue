@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
-
+import { formatImageUrl } from '@shared/helpers/url';
 export interface DocumentoEntregable {
   tipo: 'PDF' | 'PPT' | 'VIDEO' | string
   titulo: string
@@ -44,11 +44,6 @@ const introText = computed(
 )
 const historialCongresos = computed(() => props.data?.historialCongresos || [])
 
-const formatMediaUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
 
 const getDocumentIconClass = (tipo?: string): string => {
   const t = (tipo || '').toUpperCase()
@@ -58,15 +53,15 @@ const getDocumentIconClass = (tipo?: string): string => {
 }
 
 const getDocumentHref = (doc: DocumentoEntregable): string => {
-  return formatMediaUrl(doc.fileUrl)
+  return formatImageUrl(doc.fileUrl)
 }
 
 const getGalleryHref = (galeria: GaleriaMultimedia): string => {
-  return formatMediaUrl(galeria.actionUrl || galeria.imageUrl)
+  return formatImageUrl(galeria.actionUrl || galeria.imageUrl)
 }
 
 const getCongressPhoto = (bloque: CongresoNode): string => {
-  return formatMediaUrl(bloque.photoUrl || bloque.imageUrl)
+  return formatImageUrl(bloque.photoUrl || bloque.imageUrl)
 }
 
 const getDocumentsGridClass = (docs: DocumentoEntregable[] = []): string => {
@@ -208,12 +203,12 @@ const preventIfEmpty = (href: string, event: MouseEvent) => {
                     rel="noopener noreferrer"
                     class="gallery-card"
                     :class="gIdx % 2 === 0 ? 'gallery-card--crimson' : 'gallery-card--blue'"
-                    :style="galeria.imageUrl ? { backgroundImage: `url(${formatMediaUrl(galeria.imageUrl)})` } : {}"
+                    :style="galeria.imageUrl ? { backgroundImage: `url(${formatImageUrl(galeria.imageUrl)})` } : {}"
                     @click="preventIfEmpty(getGalleryHref(galeria), $event)"
                   >
                     <img
                       v-if="galeria.imageUrl"
-                      :src="formatMediaUrl(galeria.imageUrl)"
+                      :src="formatImageUrl(galeria.imageUrl)"
                       alt=""
                       class="gallery-card__image"
                     />
@@ -229,12 +224,12 @@ const preventIfEmpty = (href: string, event: MouseEvent) => {
           </div>
 
           <a
-            :href="formatMediaUrl(bloque.reportFileUrl)"
+            :href="formatImageUrl(bloque.reportFileUrl)"
             :target="bloque.reportFileUrl ? '_blank' : '_self'"
             rel="noopener noreferrer"
             class="congreso-block__report-btn"
             :class="{ 'congreso-block__report-btn--disabled': !bloque.reportFileUrl }"
-            @click="preventIfEmpty(formatMediaUrl(bloque.reportFileUrl), $event)"
+            @click="preventIfEmpty(formatImageUrl(bloque.reportFileUrl), $event)"
           >
             Descargar Oficial {{ bloque.year }} (PDF)
           </a>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-
+import { formatImageUrl } from '@shared/helpers/url';
 const props = defineProps<{
   data: any
 }>();
@@ -15,12 +15,7 @@ const introText = computed(
 const cards = computed(() => props.data?.cards || []);
 const wideCard = computed(() => props.data?.wideCard || null);
 
-// Helper defensivo para formatear rutas multimedia de tu storage Fastify/Laravel
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `http://127.0.0.1:4000/storage/${url}`;
-};
+
 </script>
 
 <template>

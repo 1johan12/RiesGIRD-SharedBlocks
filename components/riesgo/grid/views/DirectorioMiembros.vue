@@ -4,7 +4,7 @@ import SectionTitle from '../../section/title/SectionTitle.vue'
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import { useUniversitiesFeed } from '../../composables/useUniversitiesFeed'
 // 🔥 CORREGIDO: Importación del ayudante global para evitar duplicación de URLs
-import { formatImageUrl } from '../../../../shared/url';
+import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
   title?: string

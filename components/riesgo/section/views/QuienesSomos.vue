@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { formatImageUrl } from '@shared/helpers/url';
 
 const props = defineProps<{
   data: any
@@ -31,7 +32,7 @@ const handleMouseLeave = () => { isHovered.value = false }
       v-if="imageUrl"
     >
       <img 
-        :src="imageUrl" 
+        :src="formatImageUrl(imageUrl)" 
         alt="Imagen Informativa"
         :style="{ filter: isHovered ? 'brightness(1.05)' : 'brightness(1)' }"
       />
