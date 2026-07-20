@@ -65,7 +65,7 @@ const getDetailLink = (post: any) => {
   return slug ? `/${postType.value}/${slug}` : '#'
 }
 
-const apiBaseUrl = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public/news'
+const apiBaseUrl = PUBLIC_API_URL || 'http://localhost:4000/api/public'
 
 const fetchFeedFromFastify = async (isAppendMode = false) => {
   if (pending.value) return
@@ -78,7 +78,7 @@ const fetchFeedFromFastify = async (isAppendMode = false) => {
   }
 
   try {
-    const url = `${apiBaseUrl}?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
+    const url = `${apiBaseUrl}/news?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
     
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
