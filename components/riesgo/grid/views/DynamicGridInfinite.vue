@@ -2,7 +2,7 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
-import apiConfig from '../../../../config/apiConfig.ts';
+import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
 
 const props = defineProps<{
   data: any

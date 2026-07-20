@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { formatImageUrl } from '@shared/helpers/url';
-import apiConfig from '../../../../config/apiConfig.ts';
+import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
 
 const props = defineProps<{
   data: any
@@ -70,7 +70,7 @@ const getDetailLink = (post: any) => {
   const slug = post?.slug || post?.id
   return slug ? `/news/${slug}` : '#'
 }
-const api = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+const api = PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
 
 const fetchFeedFromFastify = async () => {
   pending.value = true

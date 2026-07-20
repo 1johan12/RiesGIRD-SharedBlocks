@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import SectionTitle from '../../section/title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
-import apiConfig from '../../../../config/apiConfig.ts';
+import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
 
 const props = defineProps<{
   data: any
@@ -18,7 +18,7 @@ const items = ref<any[]>([]);
 const pending = ref(false);
 const selectedYear = ref('');
 
-const api = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+const api = PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
 
 const fetchAsambleasFromFastify = async () => {
   pending.value = true;

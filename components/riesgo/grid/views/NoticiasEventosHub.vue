@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { formatImageUrl } from '@shared/helpers/url';
-import apiConfig from '../../../../config/apiConfig.ts';
+import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
 
 // ── 🧠 CONTRATOS DE INTERFACES ESTRICTAS DE TU API DE FASTIFY ──
 export interface FastifyPostRecord {
@@ -48,7 +48,7 @@ const items = ref<FastifyPostRecord[]>([]);
 const pending = ref(false);
 const searchQuery = ref('');
 const currentSliderIndex = ref(0);
-const api = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+const api = PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
 
 // Función base de Fetch (Utilizada por el Panel SPA Admin)
 const fetchFeedFromFastify = async () => {
