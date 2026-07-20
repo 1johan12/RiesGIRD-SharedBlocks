@@ -248,8 +248,10 @@ const getKey = (item: ObjectiveItem, index: number) => item.id ?? index
 }
 
 .specific-objective__box {
+  position: relative;
+
   min-height: 124px;
-  padding: 24px 20px 20px;
+  padding: 30px 20px 20px;
   box-sizing: border-box;
 
   border-radius: 8px;
@@ -259,7 +261,25 @@ const getKey = (item: ObjectiveItem, index: number) => item.id ?? index
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 101;
+
+  overflow: visible;
+}
+
+/* Triángulo invertido */
+.specific-objective__box::before {
+  content: "";
+  position: absolute;
+
+  top: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  width: 25px;
+  height: 15px;
+
+  background: #ffffff;
+
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 
 .specific-objective__text {
