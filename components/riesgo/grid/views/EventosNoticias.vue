@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { formatImageUrl } from '@shared/helpers/url';
+import apiConfig from '../../../../config/apiConfig.ts';
 
 const props = defineProps<{
   data: any
@@ -18,11 +20,6 @@ const pending = ref(false)
 
 const getCardAccent = (index: number) => (index % 2 === 0 ? '#e1113f' : '#274e9d')
 
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
 
 const parseDate = (dateString?: string) => {
   if (!dateString) return null
@@ -73,12 +70,13 @@ const getDetailLink = (post: any) => {
   const slug = post?.slug || post?.id
   return slug ? `/news/${slug}` : '#'
 }
+const api = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
 
 const fetchFeedFromFastify = async () => {
   pending.value = true
 
   try {
-    let url = `https://api.redgirdaccperu.edu.pe/api/public/news?limit=${limit.value}`
+    let url = `${api}/news?limit=${limit.value}`
     if (postType.value !== 'all') {
       url += `&type=${postType.value}`
     }

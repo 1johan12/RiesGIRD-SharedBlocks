@@ -3,8 +3,8 @@ import { ref, computed, watch } from 'vue'
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import { PUBLIC_API_URL } from '../../../../config/apiConfig'
-// import { formatImageUrl } from '../../../../../front/src/helpers/url'
-import { formatImageUrl } from '../../../../shared/url';
+import { formatImageUrl } from '@shared/helpers/url';
+
 interface BlockData {
   title?: string
   limit?: number | string

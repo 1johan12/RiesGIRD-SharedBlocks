@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
+import { formatImageUrl } from '@shared/helpers/url';
+
 
 interface BlockData {
   title?: string
@@ -36,11 +38,6 @@ const categorias = [
   { label: 'ETC', value: 'etc' }
 ]
 
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
 
 const displayCategoryLabel = (typeString: string) => {
   if (!typeString) return 'Aliado'
@@ -61,7 +58,7 @@ const aliadosFiltrados = computed(() => {
 const fetchAliadosFromFastify = async () => {
   pending.value = true
   try {
-    const url = `https://api.redgirdaccperu.edu.pe/api/public/partners?limit=${limit.value}`
+    const url = `http://localhost:4000/api/public/partners?limit=${limit.value}`
     const response = await fetch(url)
 
     if (response.ok) {

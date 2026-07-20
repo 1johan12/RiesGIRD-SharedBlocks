@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue';
+import { formatImageUrl } from '@shared/helpers/url';
+import apiConfig from '../../../../config/apiConfig.ts';
 
 const props = defineProps<{
   data: any
@@ -23,11 +25,7 @@ const isNoMoreRecords = ref(false)
 
 const getCardAccent = (index: number) => (index % 2 === 0 ? '#e1113f' : '#274e9d')
 
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/')) return url
-  return `http://127.0.0.1:4000/storage/${url}`
-}
+
 
 const parseDate = (dateString?: string) => {
   if (!dateString) return null
@@ -67,9 +65,8 @@ const getDetailLink = (post: any) => {
   return slug ? `/${postType.value}/${slug}` : '#'
 }
 
-/**
- * 🛰️ ACCESO ASÍNCRONO APILADO FILTRANDO POR TU ENUM EXACTO DE FASTIFY
- */
+const apiBaseUrl = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public/news'
+
 const fetchFeedFromFastify = async (isAppendMode = false) => {
   if (pending.value) return
   pending.value = true
@@ -81,7 +78,7 @@ const fetchFeedFromFastify = async (isAppendMode = false) => {
   }
 
   try {
-    const url = `https://api.redgirdaccperu.edu.pe/api/public/news?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
+    const url = `${apiBaseUrl}?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
     
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)

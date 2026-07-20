@@ -4,6 +4,7 @@ import SectionTitle from '../../section/title/SectionTitle.vue'
 // 🎯 Inyección obligatoria de tu Modal de Autoridades Intacto
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import { useUniversitiesFeed } from '../../composables/useUniversitiesFeed.ts'
+import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
   title?: string
@@ -28,7 +29,6 @@ interface UniversityModalPayload {
 
 const props = defineProps<{
   data: BlockData | null
-  // Prop opcional por si deseas inyectarle el componente de enrutado (NuxtLink o router-link) desde la página base
   linkComponent?: any 
 }>()
 
@@ -40,7 +40,6 @@ const forcedType = computed(() => props.data?.forcedType || 'all')
 const actionText = computed(() => props.data?.actionText || 'Ver Más')
 const actionUrl = computed(() => props.data?.actionUrl || '#')
 
-// Resuelve dinámicamente si usará NuxtLink, router-link o una etiqueta "a" plana según el host
 const linkTag = computed(() => props.linkComponent || 'router-link')
 
 // ── 🎯 USO DEL COMPOSABLE ABSTRAÍDO ──
@@ -50,14 +49,6 @@ const limitRender = ref(initialLimit.value)
 const filtroNombre = ref('')
 const filtroTipo = ref('')
 
-// Constante Global de almacenamiento para evitar IPs duras en formateadores
-const STORAGE_BASE_URL = 'http://127.0.0.1:4000/storage'
-
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('data:') || url.startsWith('/')) return url
-  return `${STORAGE_BASE_URL}/${url}`
-}
 
 const translateType = (type: string) => {
   const dictionary: Record<string, string> = {
@@ -73,16 +64,12 @@ const translateType = (type: string) => {
 const isModalOpen = ref(false)
 const selectedRector = ref<UniversityModalPayload | null>(null)
 
-/**
- * 🎯 ADAPTADOR AD-HOC ADENTRO DEL PADRE MÁS GRANDE
- * Extrae los datos de la grilla y los empaqueta exactamente como los pide "UniversityProp"
- */
 const openTeamModal = (uni: any) => {
   selectedRector.value = {
-    university_id: uni.id,                      // Sincroniza con props.universityData.university_id en el modal
-    university_name: uni.name,                  // Sincroniza con props.universityData.university_name en el modal
-    university_abbreviation: uni.siglas || '', // Sincroniza con computed universityAbbreviation
-    university_logo_url: formatImageUrl(uni.logo_url), // Sincroniza con computed universityLogoUrl
+    university_id: uni.id,                      
+    university_name: uni.name,                  
+    university_abbreviation: uni.siglas || '',
+    university_logo_url: formatImageUrl(uni.logo_url),
     university_logo: uni.logo_url || '',
     first_name: '',
     last_name: '',

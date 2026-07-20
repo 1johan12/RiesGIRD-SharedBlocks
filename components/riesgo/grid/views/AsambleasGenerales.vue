@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import SectionTitle from '../../section/title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
+import apiConfig from '../../../../config/apiConfig.ts';
 
 const props = defineProps<{
   data: any
@@ -17,14 +18,12 @@ const items = ref<any[]>([]);
 const pending = ref(false);
 const selectedYear = ref('');
 
-/**
- * 🛰️ CONSUMO MAESTRO DIRECTO POR API FETCH
- * Golpea tu backend en Fastify trayendo el slug e identificadores únicos
- */
+const api = apiConfig.PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+
 const fetchAsambleasFromFastify = async () => {
   pending.value = true;
   try {
-    let url = `https://api.redgirdaccperu.edu.pe/api/public/news?limit=${limit.value}&type=${postType.value}`;
+    let url = `${api}/news?limit=${limit.value}&type=${postType.value}`;
     const response = await fetch(url);
     
     if (response.ok) {

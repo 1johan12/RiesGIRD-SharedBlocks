@@ -111,16 +111,13 @@ const rectorHeroFallbackIcon = computed(() => {
   return universityLogoUrl.value ? 'bi bi-building-fill' : 'bi bi-building-fill'
 })
 
-/**
- * 🛰️ ACCESO ASÍNCRONO RELACIONAL DESACOPLADO
- */
+
 const fetchTeamFromFastify = async (universityId: number) => {
   loadingTeam.value = true
   teamMembers.value = []
 
   try {
-    // 🎯 CORREGIDO: Consumimos la constante global de entorno para reventar puertos duros
-    const url = `${PUBLIC_API_URL}/teams?university_id=${universityId}&limit=50`
+    const url = `${PUBLIC_API_URL}/teams?university_id=${universityId}&limit=50&person_type=board_member`;
     const response = await fetch(url)
 
     if (response.ok) {

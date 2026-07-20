@@ -3,8 +3,8 @@
   import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
   import SectionTitle from '../../section/title/SectionTitle.vue'
   // Capa unificada de rutas planas importada desde tu archivo central
-  import { PUBLIC_API_URL } from '../../../../config/apiConfig'
-  import { formatImageUrl } from '../../../../helpers/url.ts';
+  import { PUBLIC_API_URL } from '../../../../../config/apiConfig.ts'
+  import { formatImageUrl } from '../../../../../helpers/url.ts';
 
   interface BlockData {
     title?: string
