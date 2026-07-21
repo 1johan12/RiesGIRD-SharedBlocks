@@ -71,7 +71,7 @@ watch(localData, (newVal) => {
         
         <div class="row g-2">
           <div class="col-6">
-            <label class="x-small fw-bold text-muted mb-1">1. Región Superior</label>
+            <label class="x-small fw-bold text-muted mb-1">1. Región Posterior</label>
             <div 
               @click="$emit('select-image', { item: localData.collageImagenes, field: 'superior' })" 
               class="collage-placeholder border rounded clickable"
@@ -81,38 +81,7 @@ watch(localData, (newVal) => {
             </div>
           </div>
 
-          <div class="col-6">
-            <label class="x-small fw-bold text-muted mb-1">2. Región Izquierda</label>
-            <div 
-              @click="$emit('select-image', { item: localData.collageImagenes, field: 'izquierda' })" 
-              class="collage-placeholder border rounded clickable"
-              :style="{ backgroundImage: `url(${localData.collageImagenes.izquierda})` }"
-            >
-              <i v-if="!localData.collageImagenes.izquierda" class="las la-image text-muted"></i>
-            </div>
-          </div>
-
-          <div class="col-6 mt-2">
-            <label class="x-small fw-bold text-muted mb-1">3. Centro Inferior</label>
-            <div 
-              @click="$emit('select-image', { item: localData.collageImagenes, field: 'centroAbajo' })" 
-              class="collage-placeholder border rounded clickable"
-              :style="{ backgroundImage: `url(${localData.collageImagenes.centroAbajo})` }"
-            >
-              <i v-if="!localData.collageImagenes.centroAbajo" class="las la-image text-muted"></i>
-            </div>
-          </div>
-
-          <div class="col-6 mt-2">
-            <label class="x-small fw-bold text-muted mb-1">4. Región Derecha</label>
-            <div 
-              @click="$emit('select-image', { item: localData.collageImagenes, field: 'derecha' })" 
-              class="collage-placeholder border rounded clickable"
-              :style="{ backgroundImage: `url(${localData.collageImagenes.derecha})` }"
-            >
-              <i v-if="!localData.collageImagenes.derecha" class="las la-image text-muted"></i>
-            </div>
-          </div>
+          
         </div>
 
       </div>

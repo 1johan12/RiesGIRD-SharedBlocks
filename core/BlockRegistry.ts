@@ -223,6 +223,28 @@ export const BLOCK_REGISTRY: Record<string, any> = {
             ]
         }
     },
+    NuestrosObjetivos2: {
+        label: '🎯 Nuestros Objetivos2 (Institucional)',
+        icon: 'las la-bullseye',
+        group: 'Institucional',
+        isBoxed: true, // 👈 ENCAJA PERFECTAMENTE EN TU ARQUITECTURA DE LIENZO INTEGRADO
+        component: defineAsyncComponent(() => import('../components/riesgo/section/views/NuestrosObjetivosV2.vue')),
+        // editor: defineAsyncComponent(() => import('../components/riesgo/section/updates//NuestrosObjetivosEditor.vue')),
+        initialData: {
+            title: 'Nuestros Objetivos',
+            introText: 'La Red Interuniversitaria para la Gestión Integral del Riesgo de Desastres y la Adaptación al Cambio Climático (RIESGIRD-ACC Perú) es un espacio de articulación académica que agrupa a las universidades del país comprometidas con la seguridad y la resiliencia climática.',
+            generalObjective: 'Impulsar la gestión integral del riesgo de desastres y la adaptación al cambio climático en las universidades peruanas, integrándolas en la formación, investigación y responsabilidad social para contribuir al desarrollo sostenible del país.',
+            titleOE: 'Nuestros Especificos',
+            introTextOE: 'Para hacer realidad nuestro objetivo mayor, hemos trazado cuatro metas concretas de trabajo:',
+            objetivosEspecificos: [
+                { id: 1, tag: 'Objetivo 1', color: 'azul', text: 'Diseñar e implementar estrategias colaborativas entre universidades que contribuyan a la reducción del riesgo de desastres y los riesgos climáticos en los territorios.' },
+                { id: 2, tag: 'Objetivo 2', color: 'azul', text: 'Fortalecer la pertinencia y calidad de las capacidades académicas en GIRD-ACC, mediante la coordinación con instituciones públicas y privadas a nivel nacional e internacional.' },
+                { id: 3, tag: 'Objetivo 3', color: 'azul', text: 'Promover alianzas interuniversitarias y multisectoriales vinculadas a la gestión del riesgo y la adaptación al cambio climático.' },
+                { id: 4, tag: 'Objetivo 4', color: 'rojo', text: 'Poner a disposición de las autoridades competentes las capacidades técnicas especializadas en los procesos de la Gestión del Riesgo de Desastres.' },
+                { id: 5, tag: 'Objetivo 5', color: 'rojo', text: 'Promover el derecho a la asistencia humanitaria y el derecho a un ambiente saludable, manteniendo independencia y autonomía institucional.' }
+            ]
+        }
+    },
     Lineamientos: {
         label: '📋 Listado de Lineamientos',
         icon: 'las la-list-ul',
