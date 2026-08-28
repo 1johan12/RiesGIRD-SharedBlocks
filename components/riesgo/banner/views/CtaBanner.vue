@@ -6,8 +6,8 @@ const props = defineProps<{
 }>();
 
 // --- LÓGICA DE CONTENIDO Y ESTILOS ---
-const text = computed(() => props.data?.text || 'Únete a la Red');
-const url = computed(() => props.data?.url || '#');
+const text = computed(() => props.data.text || 'Únete a la Red');
+const url = computed(() => props.data?.actionUrl || '#');
 const targetBlank = computed(() => props.data?.targetBlank ? '_blank' : '_self');
 const bgGradient = computed(() => props.data?.bgGradient || 'linear-gradient(135deg, #db143c 0%, #7e22ce 50%, #25529a 100%)');
 

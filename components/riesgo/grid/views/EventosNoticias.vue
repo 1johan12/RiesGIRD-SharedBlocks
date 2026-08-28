@@ -70,7 +70,7 @@ const getDetailLink = (post: any) => {
   const slug = post?.slug || post?.id
   return slug ? `/news/${slug}` : '#'
 }
-const api = PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
 
 const fetchFeedFromFastify = async () => {
   pending.value = true

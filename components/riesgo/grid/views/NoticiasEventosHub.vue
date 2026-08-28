@@ -48,7 +48,7 @@ const items = ref<FastifyPostRecord[]>([]);
 const pending = ref(false);
 const searchQuery = ref('');
 const currentSliderIndex = ref(0);
-const api = PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
 
 // Función base de Fetch (Utilizada por el Panel SPA Admin)
 const fetchFeedFromFastify = async () => {
@@ -102,7 +102,7 @@ if (typeof (globalThis as any).useAsyncData === 'function') {
   const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
     `megasection-feed-${blockId}`,
     async () => {
-      const url = `http://localhost:4000/api/public/news?limit=100`;
+      const url = `http://127.0.0.1:4000/api/public/news?limit=100`;
       const response = await fetch(url);
       if (response.ok) {
         const resData = await response.json();

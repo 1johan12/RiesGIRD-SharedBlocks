@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import { formatImageUrl } from '@shared/helpers/url';
+import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
+const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
 
 
 interface BlockData {
@@ -58,7 +60,7 @@ const aliadosFiltrados = computed(() => {
 const fetchAliadosFromFastify = async () => {
   pending.value = true
   try {
-    const url = `http://localhost:4000/api/public/partners?limit=${limit.value}`
+    const url = `${api}/partners?limit=${limit.value}`
     const response = await fetch(url)
 
     if (response.ok) {
@@ -151,7 +153,7 @@ watch(
             class="filter-chip"
             :class="{
               'filter-chip--active': categoriaActiva === cat.value,
-              'filter-chip--grey': cat.value === 'cooperacion' || cat.value === 'etc'
+              //'filter-chip--grey': cat.value === 'cooperacion' || cat.value === 'etc'
             }"
             @click="toggleCategoria(cat.value)"
           >

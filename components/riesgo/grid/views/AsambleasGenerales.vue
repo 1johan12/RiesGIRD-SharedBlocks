@@ -18,7 +18,7 @@ const items = ref<any[]>([]);
 const pending = ref(false);
 const selectedYear = ref('');
 
-const api = PUBLIC_API_URL || 'http://localhost:4000/api/public'; 
+const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
 
 const fetchAsambleasFromFastify = async () => {
   pending.value = true;

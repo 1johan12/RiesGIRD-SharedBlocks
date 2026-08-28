@@ -4,7 +4,6 @@
     <NewsArticle class="article" v-bind="pageData.article" />
     
     <NewsAside class="sidebar" v-bind="pageData.sidebar" />
-
   </main>
 </template>
 
@@ -49,9 +48,10 @@ const heroData = computed(() => {
     data: {
       title: innerData.title || props.pageData?.article?.title || 'Sin título',
       subtitle: innerData.subtitle || '',
-      // Se asigna la imagen al campo que está leyendo la línea 65 del Hero (backgroundImage)
-      backgroundImage: innerData.backgroundImage || props.pageData?.article?.coverImage || '',
-      waveColor: innerData.waveColor || '#ffffff'
+      backgroundImage: innerData.backgroundImage,
+      coverImage: props.pageData?.article?.coverImage || '',
+
+      waveColor: innerData.waveColor || '#f5f7ff'
     }
   };
 });

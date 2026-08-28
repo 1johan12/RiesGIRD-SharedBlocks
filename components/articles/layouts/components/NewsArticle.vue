@@ -1,14 +1,13 @@
 <template>
     <article class="article">
-        <header class="article__header">
+        <!-- <header class="article__header">
             <h1 class="article__title">
                 {{ title }}
             </h1>
             <div class="article__title-line" />
-        </header>
+        </header> -->
         
         <img class="article__cover" :src="coverImage" :alt="title">
-        
         <div
           class="article__content"
           v-html="introContent"
@@ -179,6 +178,19 @@ defineProps<{
     text-align: left;
   }
 
+  /* Limita las imágenes al ancho del contenedor */
+.article__content :deep(img) {
+  max-width: 100%;
+  height: auto;
+  display: block; /* Elimina espacios vacíos debajo de la imagen */
+  margin: 16px auto; /* Centra la imagen y le da espacio vertical */
+}
+
+/* Evita desbordamiento de contenedores o figuras si el Rich Text usa <figure> */
+.article__content :deep(figure) {
+  max-width: 100%;
+  margin: 16px auto;
+}
   /* ======================================
    GALLERY
 ====================================== */

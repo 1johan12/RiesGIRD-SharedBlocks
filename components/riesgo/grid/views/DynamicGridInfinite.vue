@@ -65,7 +65,7 @@ const getDetailLink = (post: any) => {
   return slug ? `/${postType.value}/${slug}` : '#'
 }
 
-const apiBaseUrl = PUBLIC_API_URL || 'http://localhost:4000/api/public'
+const apiBaseUrl = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'
 
 const fetchFeedFromFastify = async (isAppendMode = false) => {
   if (pending.value) return
