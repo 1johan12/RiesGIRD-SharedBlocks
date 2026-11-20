@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { formatImageUrl } from '@shared/helpers/url';
-import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
+import { PUBLIC_API_URL, getPublicApiUrl } from '../../../../config/apiConfig';
+import { getPostDetailRoute } from '../../../../helpers/sanitize';
 
 // ── 🧠 CONTRATOS DE INTERFACES ESTRICTAS DE TU API DE FASTIFY ──
 export interface FastifyPostRecord {
@@ -48,13 +49,12 @@ const items = ref<FastifyPostRecord[]>([]);
 const pending = ref(false);
 const searchQuery = ref('');
 const currentSliderIndex = ref(0);
-const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
 
 // Función base de Fetch (Utilizada por el Panel SPA Admin)
 const fetchFeedFromFastify = async () => {
   pending.value = true;
   try {
-    const url = `${api}/news?limit=100`;
+    const url = `${getPublicApiUrl()}/news?limit=100`;
     const response = await fetch(url);
     if (response.ok) {
       const resData = await response.json();
@@ -76,7 +76,7 @@ const fetchFeedFromFastify = async () => {
 };
 
 const injectMockData = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window;
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window));
   if (!isNuxtEnvironment) {
     const hace2Horas = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const hace3Dias = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
@@ -92,17 +92,12 @@ const injectMockData = () => {
   }
 };
 
-/* * 🚀 ARQUITECTURA ISOMÓRFICA DEFENSIVA (MÁXIMO SEO + COMPATIBILIDAD SPA)
- * Aprovechamos los auto-imports globales de Nuxt para inyectar la data en el payload SSR
- * sin que explote el compilador de Vite en tu panel de administración.
- */
 if (typeof (globalThis as any).useAsyncData === 'function') {
-  // 🔥 ENTORNO NUXT (PÚBLICO): Forzamos bloqueo SSR para indexar contenido en Google
   const blockId = props.data?.id || 'static-hub';
   const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
     `megasection-feed-${blockId}`,
     async () => {
-      const url = `http://127.0.0.1:4000/api/public/news?limit=100`;
+      const url = `${getPublicApiUrl()}/news?limit=100`;
       const response = await fetch(url);
       if (response.ok) {
         const resData = await response.json();
@@ -112,7 +107,6 @@ if (typeof (globalThis as any).useAsyncData === 'function') {
     }
   );
 
-  // Sincronizamos de inmediato el estado rehidratado de Nuxt
   watch(ssrRecords, (newVal) => {
     if (newVal && newVal.length > 0) {
       items.value = newVal;
@@ -123,8 +117,7 @@ if (typeof (globalThis as any).useAsyncData === 'function') {
 
   watch(ssrPending, (val) => { pending.value = val; }, { immediate: true });
 } else {
-  // 💻 ENTORNO VUE SPA (ADMIN CANVAS): Flujo reactivo en caliente tradicional de cliente
-  watch(() => props.data, () => { fetchFeedFromFastify(); }, { deep: true, immediate: true });
+  fetchFeedFromFastify();
 }
 
 // ── ⚙️ LOGICA DE FILTRADO Y PROCESAMIENTO (Mantenida intacta) ──
@@ -162,14 +155,14 @@ const getFilteredFeedForGrid = (postType: string, limitCount: number | string) =
 
 const latestNewsSidebar = computed(() => {
   const ahora = Date.now();
-  const unDiaEnMilisegundos = 24 * 60 * 60 * 1000000;
+  const sieteDiasEnMs = 7 * 24 * 60 * 60 * 1000;
 
   return items.value.filter(post => {
     const esDestacado = post.is_featured === 1 || post.is_featured === true;
     const timestampCreacion = new Date(post.created_at || post.start_date || '').getTime();
-    const esReciente24h = (ahora - timestampCreacion) <= unDiaEnMilisegundos;
+    const esReciente = !Number.isNaN(timestampCreacion) && (ahora - timestampCreacion) <= sieteDiasEnMs;
 
-    return esDestacado || esReciente24h;
+    return esDestacado || esReciente;
   }).slice(0, 4);
 });
 
@@ -186,14 +179,24 @@ const translateType = (type: string) => {
 const getParsedDate = (dateString: string | undefined) => {
   if (!dateString) return { day: '24', month: 'Jun' };
   const date = new Date(dateString);
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = date.toLocaleString('es-ES', { month: 'short' }).replace('.', '');
+  if (Number.isNaN(date.getTime())) return { day: '24', month: 'Jun' };
+  const day = date.getUTCDate().toString().padStart(2, '0');
+  const month = date.toLocaleString('es-ES', { month: 'short', timeZone: 'UTC' }).replace('.', '');
   return { day, month };
 };
 
 const formatReadableDate = (dateString: string | undefined) => {
   if (!dateString) return 'Junio 2026';
-  return new Date(dateString).toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return 'Junio 2026';
+  return date.toLocaleString('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+};
+
+const formatSidebarDate = (dateString: string | undefined) => {
+  if (!dateString) return 'Reciente';
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return 'Reciente';
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 };
 
 </script>
@@ -245,7 +248,7 @@ const formatReadableDate = (dateString: string | undefined) => {
             <div class="eventos-grid" v-if="getFilteredFeedForGrid(grid.postType, grid.limit).length > 0">
               <router-link v-for="(post, index) in getFilteredFeedForGrid(grid.postType, grid.limit)"
                 :key="post.id || index"
-                :to="'/' + (post.type == 'event' ? 'events' : post.type) + '/' + (post.slug || '')" class="evento-card">
+                :to="getPostDetailRoute(post.type, post.slug)" class="evento-card">
                 <div class="card-top-row">
                   <span class="badge-esan"><span>ESAN</span></span>
                   <span class="badge-type">
@@ -270,8 +273,8 @@ const formatReadableDate = (dateString: string | undefined) => {
               No se encontraron registros activos para este canal.
             </div>
             <div class="section-footer">
-              <router-link :to="'/' + (grid.postType === 'event' ? 'events' : grid.postType)" class="btn-grid-more">
-                Buscar más sobre los Próximos Eventos
+              <router-link :to="grid.postType === 'event' ? '/events' : grid.postType === 'assemblies' ? '/assemblies' : '/news'" class="btn-grid-more">
+                Ver más publicaciones
               </router-link>
             </div>
           </section>
@@ -292,7 +295,7 @@ const formatReadableDate = (dateString: string | undefined) => {
               <router-link
                 v-for="link in latestNewsSidebar"
                 :key="link.id"
-                :to="'/' + (link.type == 'event' ? 'events' : link.type) + '/' + (link.slug || '')"
+                :to="getPostDetailRoute(link.type, link.slug || link.id)"
                 class="sidebar-mini-card sidebar-mini-card--news"
               >
                 <div class="mini-card-details mini-card-details--news">
@@ -307,7 +310,7 @@ const formatReadableDate = (dateString: string | undefined) => {
                     {{ link.title }}
                   </h4>
 
-                  <p class="mini-card-time">Hace 8 horas</p>
+                  <p class="mini-card-time">{{ formatSidebarDate(link.start_date || link.created_at) }}</p>
                 </div>
 
                 <div class="mini-card-thumb mini-card-thumb--sm">

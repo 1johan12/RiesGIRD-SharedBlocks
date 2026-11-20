@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{ modelValue: any }>();
 const emit = defineEmits(['update:modelValue', 'select-image']);
@@ -84,9 +85,13 @@ watch(localData, (newVal) => {
               <div 
                 @click="$emit('select-image', { item: card, field: 'imageUrl' })" 
                 class="media-placeholder-box border rounded clickable text-center"
-                :style="{ backgroundImage: card.imageUrl ? `url(${card.imageUrl})` : 'none' }"
+                :style="{ backgroundImage: card.imageUrl ? `url(${formatImageUrl(card.imageUrl, '')})` : 'none' }"
               >
                 <i v-if="!card.imageUrl" class="las la-image text-muted fs-4"></i>
+              </div>
+              <div class="d-flex gap-1 mt-1">
+                <button type="button" class="btn btn-xs btn-outline-primary flex-grow-1" @click="$emit('select-image', { item: card, field: 'imageUrl' })">{{ card.imageUrl ? 'Cambiar' : 'Elegir' }}</button>
+                <button v-if="card.imageUrl" type="button" class="btn btn-xs btn-outline-danger" @click="card.imageUrl = ''"><i class="las la-times"></i></button>
               </div>
             </div>
 
@@ -115,9 +120,13 @@ watch(localData, (newVal) => {
             <div 
               @click="$emit('select-image', { item: localData.wideCard, field: 'imageUrl' })" 
               class="media-placeholder-box border rounded clickable text-center"
-              :style="{ backgroundImage: localData.wideCard.imageUrl ? `url(${localData.wideCard.imageUrl})` : 'none' }"
+              :style="{ backgroundImage: localData.wideCard.imageUrl ? `url(${formatImageUrl(localData.wideCard.imageUrl, '')})` : 'none' }"
             >
               <i v-if="!localData.wideCard.imageUrl" class="las la-image text-muted fs-4"></i>
+            </div>
+            <div class="d-flex gap-1 mt-1">
+              <button type="button" class="btn btn-xs btn-outline-primary flex-grow-1" @click="$emit('select-image', { item: localData.wideCard, field: 'imageUrl' })">{{ localData.wideCard.imageUrl ? 'Cambiar' : 'Elegir' }}</button>
+              <button v-if="localData.wideCard.imageUrl" type="button" class="btn btn-xs btn-outline-danger" @click="localData.wideCard.imageUrl = ''"><i class="las la-times"></i></button>
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { sanitizeHref } from '../../../../helpers/sanitize';
 
 const props = defineProps<{
   data: any
@@ -7,7 +8,7 @@ const props = defineProps<{
 
 const title = computed(() => props.data?.title || 'Sube tu investigación');
 const buttonText = computed(() => props.data?.buttonText || 'Aporta al Repositorio');
-const actionUrl = computed(() => props.data?.actionUrl || '#');
+const actionUrl = computed(() => sanitizeHref(props.data?.actionUrl || props.data?.url || '#'));
 const targetBlank = computed(() => props.data?.targetBlank ?? true);
 </script>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { sanitizeHtml } from '../../../../helpers/sanitize';
 
 const props = defineProps<{
   data: any
@@ -18,11 +19,11 @@ const text = computed(() => props.data?.text || 'A diferencia de un laboratorio 
             {{ title }}
           </h2>
 
-          <p
+          <div
             v-if="text"
             class="naturaleza-section__text"
-            v-html="text"
-          ></p>
+            v-html="sanitizeHtml(text)"
+          ></div>
         </div>
       </div>
     </div>

@@ -5,14 +5,14 @@ const props = defineProps<{ modelValue: any }>();
 const emit = defineEmits(['update:modelValue']);
 
 
-const localData = ref({ ...props.modelValue });
-
-
+const localData = ref({ ...(props.modelValue || {}) });
 
 watch(() => props.modelValue, (newVal) => {
-    localData.value = { ...newVal };
+    if (!newVal) return;
+    if (JSON.stringify(newVal) !== JSON.stringify(localData.value)) {
+        localData.value = { ...localData.value, ...newVal };
+    }
 }, { deep: true });
-
 
 watch(localData, (newVal) => {
     emit('update:modelValue', { ...newVal });

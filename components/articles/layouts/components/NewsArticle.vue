@@ -10,7 +10,7 @@
         <img class="article__cover" :src="coverImage" :alt="title">
         <div
           class="article__content"
-          v-html="introContent"
+          v-html="sanitizeHtml(introContent)"
         />
         
         <div v-if="gallery && gallery.length > 0" class="article__gallery">
@@ -19,7 +19,7 @@
         
         <div
           class="article__content"
-          v-html="bodyContent"
+          v-html="sanitizeHtml(bodyContent)"
         />
         
         <section v-if="agreements && agreements.length > 0" class="article__agreements">
@@ -50,11 +50,12 @@
             </div>
         </section>
 
-        <div class="article__content" v-html="richTextContent"></div>
+        <div class="article__content" v-html="sanitizeHtml(richTextContent)"></div>
     </article>
 </template>
 
 <script setup lang="ts">
+import { sanitizeHtml } from '../../../../helpers/sanitize';
 
 type AgreementColor = 'red' | 'blue'
 interface Agreement {

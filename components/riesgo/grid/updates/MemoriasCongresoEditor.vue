@@ -18,6 +18,8 @@ export interface CongresoNode {
   year: string;
   eventName: string;
   description: string;
+  photoUrl?: string;
+  imageUrl?: string;
   reportFileUrl: string; // PDF Consolidado del botón inferior
   documentos: DocumentoEntregable[];
   galerias: GaleriaMultimedia[];
@@ -42,6 +44,7 @@ const localData = ref<MemoriasBlockData>({
         year: b.year || '2026',
         eventName: b.eventName || '',
         description: b.description || '',
+        photoUrl: b.photoUrl || b.imageUrl || '',
         reportFileUrl: b.reportFileUrl || '',
         documentos: Array.isArray(b.documentos) ? b.documentos.map((d: any) => ({ tipo: d.tipo || 'PDF', titulo: d.titulo || '', fileUrl: d.fileUrl || '' })) : [],
         galerias: Array.isArray(b.galerias) ? b.galerias.map((g: any) => ({ imageUrl: g.imageUrl || '', actionUrl: g.actionUrl || '' })) : []
@@ -87,11 +90,8 @@ const removeGalleryItem = (congresoIdx: number, galIdx: number) => {
 };
 
 // --- HELPER DE PREVISUALIZACIÓN DE MINIATURAS ---
-const formatThumbUrl = (url: string): string => {
-  if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `http://127.0.0.1:4000/storage/${url}`;
-};
+import { formatImageUrl } from '../../../../helpers/url';
+const formatThumbUrl = (url: string): string => formatImageUrl(url, '');
 
 // Sincronización bidireccional limpia contra el canvas y orquestador del CMS
 watch(localData, (newVal) => {
@@ -116,6 +116,7 @@ const addCongresoAnio = () => {
     year: (new Date().getFullYear()).toString(),
     eventName: 'Congreso Internacional Anual',
     description: '',
+    photoUrl: '',
     reportFileUrl: '',
     documentos: [{ tipo: 'PDF', titulo: 'Declaratoria Oficial', fileUrl: '' }],
     galerias: [] // Comienza limpio listo para añadir fotos de forma incremental
@@ -204,6 +205,23 @@ const addCongresoAnio = () => {
                 <div class="col-12">
                   <label class="x-small fw-bold text-muted mb-0.5">Descripción de Ponencias</label>
                   <textarea v-model="block.description" class="form-control form-control-sm small-text" rows="2" placeholder="Resumen corto de los acuerdos..."></textarea>
+                </div>
+                <div class="col-12">
+                  <label class="x-small fw-bold text-primary mb-0.5">Fotografía Principal del Congreso</label>
+                  <div class="d-flex align-items-center gap-2">
+                    <div
+                      @click="$emit('select-image', { item: block, field: 'photoUrl' })"
+                      class="editor-thumbnail-preview border rounded shadow-xs text-center clickable"
+                      :style="{ backgroundImage: (block.photoUrl || block.imageUrl) ? `url(${formatThumbUrl(block.photoUrl || block.imageUrl || '')})` : 'none' }"
+                      title="Elegir fotografía del congreso"
+                    >
+                      <i v-if="!block.photoUrl && !block.imageUrl" class="bi bi-image text-muted fs-6"></i>
+                    </div>
+                    <input type="text" v-model="block.photoUrl" class="form-control form-control-xs font-mono" placeholder="URL de la foto principal...">
+                    <button v-if="block.photoUrl || block.imageUrl" type="button" class="btn btn-xs btn-outline-secondary px-1.5" title="Quitar foto" @click="block.photoUrl = ''; block.imageUrl = ''">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 

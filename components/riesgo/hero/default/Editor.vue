@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { formatImageUrl } from '../../../../helpers/url'
 
 const props = defineProps<{
     modelValue: any
@@ -77,13 +78,14 @@ watch(
                 </div>
 
                 <div class="mb-3">
-                    <label class="small text-muted">
+                    <label class="small text-muted d-block mb-1">
                         Imagen de fondo
                     </label>
 
                     <div class="media-placeholder border rounded clickable" :style="{
-                        backgroundImage:
-                            `url(${localData.backgroundImage})`
+                        backgroundImage: localData.backgroundImage
+                            ? `url(${formatImageUrl(localData.backgroundImage, '')})`
+                            : 'none'
                     }" @click="
                 $emit(
                     'select-image',
@@ -96,6 +98,14 @@ watch(
                         <i v-if="
                             !localData.backgroundImage
                         " class="las la-plus fs-2 text-muted" />
+                    </div>
+                    <div class="d-flex gap-1 mt-1">
+                        <button type="button" class="btn btn-xs btn-outline-primary flex-grow-1" @click="$emit('select-image', { item: localData, field: 'backgroundImage' })">
+                            <i class="las la-image me-1"></i>{{ localData.backgroundImage ? 'Cambiar' : 'Elegir' }}
+                        </button>
+                        <button v-if="localData.backgroundImage" type="button" class="btn btn-xs btn-outline-danger" @click="localData.backgroundImage = ''">
+                            <i class="las la-times"></i>
+                        </button>
                     </div>
                 </div>
 

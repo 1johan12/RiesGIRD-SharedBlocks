@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import SectionTitle from '../../section/title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
-import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
+import { sanitizeHref, getPostDetailRoute } from '../../../../helpers/sanitize';
+import { getPublicApiUrl } from '../../../../config/apiConfig';
 
 const props = defineProps<{
   data: any
 }>();
 
+const router = useRouter();
+
 // --- CONFIGURACIÓN REACTIVA DESDE EL PAGE BUILDER ---
 const title = computed(() => props.data?.title || 'Asambleas Generales');
-const limit = computed(() => Number(props.data?.limit) || 6);
+const limit = computed(() => Math.min(Math.max(Number(props.data?.limit) || 6, 1), 100));
 const postType = computed(() => props.data?.postType || 'assemblies');
 
 // --- ESTADOS REACTIVOS DEL CONSUMIDOR ---
@@ -18,37 +22,39 @@ const items = ref<any[]>([]);
 const pending = ref(false);
 const selectedYear = ref('');
 
-const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
+const mapPostToAssembly = (post: any) => {
+  const dateRef = post.start_date || post.created_at;
+  const parsed = dateRef ? new Date(dateRef) : null;
+  const anioCalculado = parsed && !Number.isNaN(parsed.getTime())
+    ? parsed.getUTCFullYear().toString()
+    : '2026';
+
+  return {
+    id: post.id,
+    slug: post.slug || '',
+    type: post.type || 'assemblies',
+    anio: anioCalculado,
+    titulo: post.title,
+    lugar: post.location || 'Sede Institucional',
+    documento: post.attachment_url ? 'Acuerdos y Conclusiones' : (post.excerpt || 'Acuerdos y Conclusiones'),
+    sub_titulo: post.excerpt || 'Acuerdos y Conclusiones',
+    fileUrl: post.attachment_url || post.action_url || '',
+    imagen: formatImageUrl(post.featured_image_path, 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=500')
+  };
+};
 
 const fetchAsambleasFromFastify = async () => {
   pending.value = true;
   try {
-    let url = `${api}/news?limit=${limit.value}&type=${postType.value}`;
+    const url = `${getPublicApiUrl()}/news?limit=${limit.value}&type=${encodeURIComponent(postType.value)}`;
     const response = await fetch(url);
     
     if (response.ok) {
       const resData = await response.json();
       const records = resData?.data || resData || [];
-      console.log(resData);
       
-      if (records.length > 0) {
-        // Mapeamos quirúrgicamente las columnas de la BD al molde de tu UI
-        items.value = records.map((post: any) => {
-          const dateRef = post.start_date || post.created_at;
-          const anioCalculado = dateRef ? new Date(dateRef).getFullYear().toString() : '2026';
-          
-          return {
-            id: post.id,
-            slug: post.slug || '', // 🎯 RECUPERADO EL SLUG DE LA BASE DE DATOS
-            anio: anioCalculado,
-            titulo: post.title,
-            lugar: post.location || 'Sede Institucional',
-            documento: post.attachment_url || 'Acuerdos y Conclusiones',
-            sub_titulo: post.excerpt || 'Acuerdos y Conclusiones',
-            fileUrl: post.attachment_url || post.action_url || '',
-            imagen: post.featured_image_path || 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=500'
-          };
-        });
+      if (Array.isArray(records) && records.length > 0) {
+        items.value = records.map(mapPostToAssembly);
       } else {
         injectMockData();
       }
@@ -63,23 +69,62 @@ const fetchAsambleasFromFastify = async () => {
   }
 };
 
-// Resguardo visual (Mocks) en desarrollo para previsualizar los clics en el panel
 const injectMockData = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window;
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window));
   if (!isNuxtEnvironment) {
     items.value = [
-      { id: 1, slug: 'asamblea-ordinaria-2024', anio: '2024', titulo: 'Asamblea General Ordinaria 2024', lugar: 'Universidad ESAN', documento: 'Acuerdos y Conclusiones', imagen: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=500' },
-      { id: 2, slug: 'asamblea-extraordinaria-2025', anio: '2025', titulo: 'Asamblea General Extraordinaria 2025', lugar: 'Sede Universidad Nacional', documento: 'Acuerdos y Conclusiones', imagen: 'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?q=80&w=500' },
-      { id: 3, slug: 'asamblea-plenaria-rectores-2026', anio: '2026', titulo: 'Asamblea Plenaria de Rectores y Delegados 2026', lugar: 'Auditorio Principal CIP', documento: 'Acuerdos y Conclusiones', imagen: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=500' }
+      { id: 1, slug: 'asamblea-ordinaria-2024', type: 'assemblies', anio: '2024', titulo: 'Asamblea General Ordinaria 2024', lugar: 'Universidad ESAN', documento: 'Acuerdos y Conclusiones', imagen: 'https://images.unsplash.com/photo-1511578314322-379afb476865?q=80&w=500' },
+      { id: 2, slug: 'asamblea-extraordinaria-2025', type: 'assemblies', anio: '2025', titulo: 'Asamblea General Extraordinaria 2025', lugar: 'Sede Universidad Nacional', documento: 'Acuerdos y Conclusiones', imagen: 'https://images.unsplash.com/photo-1431540015161-0bf868a2d407?q=80&w=500' },
+      { id: 3, slug: 'asamblea-plenaria-rectores-2026', type: 'assemblies', anio: '2026', titulo: 'Asamblea Plenaria de Rectores y Delegados 2026', lugar: 'Auditorio Principal CIP', documento: 'Acuerdos y Conclusiones', imagen: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=500' }
     ].slice(0, limit.value);
   } else {
     items.value = [];
   }
 };
 
-watch([limit, postType], () => {
-  fetchAsambleasFromFastify();
-}, { immediate: true });
+if (typeof (globalThis as any).useAsyncData === 'function') {
+  const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
+    () => `asambleas-${postType.value}-${limit.value}`,
+    async () => {
+      try {
+        const url = `${getPublicApiUrl()}/news?limit=${limit.value}&type=${encodeURIComponent(postType.value)}`;
+        const response = await fetch(url);
+        if (response.ok) {
+          const resData = await response.json();
+          const records = resData?.data || resData || [];
+          return Array.isArray(records) ? records.map(mapPostToAssembly) : [];
+        }
+      } catch (e) {
+        console.error('SSR asambleas fetch error:', e);
+      }
+      return [];
+    },
+    { watch: [limit, postType] }
+  );
+
+  watch(ssrRecords, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+      items.value = newVal;
+    } else {
+      injectMockData();
+    }
+  }, { immediate: true });
+
+  watch(ssrPending, (val) => { pending.value = Boolean(val); }, { immediate: true });
+} else {
+  watch([limit, postType], () => {
+    fetchAsambleasFromFastify();
+  }, { immediate: true });
+}
+
+const getAssemblyRoute = (asamblea: any) => getPostDetailRoute(asamblea?.type || postType.value, asamblea?.slug || asamblea?.id);
+
+const goToAssembly = (asamblea: any) => {
+  const target = getAssemblyRoute(asamblea);
+  if (router && typeof router.push === 'function') {
+    router.push(target);
+  }
+};
 
 // --- FILTROS DE CLIENTE ---
 const filteredAsambleas = computed(() => {
@@ -92,7 +137,11 @@ const dynamicYears = computed(() => {
   return [...new Set(years)].sort((a, b) => Number(b) - Number(a));
 });
 
-
+watch(dynamicYears, (years) => {
+  if (selectedYear.value && !years.includes(selectedYear.value)) {
+    selectedYear.value = '';
+  }
+});
 </script>
 
 <template>
@@ -123,11 +172,14 @@ const dynamicYears = computed(() => {
         </div>
 
         <div v-else-if="filteredAsambleas.length > 0" class="asambleas-grid-layout">
-          <router-link
+          <article
             v-for="(asamblea, index) in filteredAsambleas"
             :key="asamblea.id || index"
-            :to="asamblea.slug ? '/assemblies/' + asamblea.slug : '/assemblies'"
             class="asamblea-card-item"
+            role="link"
+            tabindex="0"
+            @click="goToAssembly(asamblea)"
+            @keydown.enter.prevent="goToAssembly(asamblea)"
           >
             <div class="card-image-wrap">
               <img
@@ -159,8 +211,9 @@ const dynamicYears = computed(() => {
 
                 <a
                   v-if="asamblea.fileUrl"
-                  :href="formatImageUrl(asamblea.fileUrl)(asamblea.fileUrl)"
+                  :href="sanitizeHref(formatImageUrl(asamblea.fileUrl), '#')"
                   target="_blank"
+                  rel="noopener noreferrer"
                   class="file-link"
                   @click.stop
                 >
@@ -173,7 +226,7 @@ const dynamicYears = computed(() => {
             <div class="card-signature" aria-hidden="true">
               <img src="../../../../assets/Vector.svg" alt="" height="100px">
             </div>
-          </router-link>
+          </article>
         </div>
 
         <div v-else class="fallback-no-data">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
-import { PUBLIC_API_URL } from '../../../../config/apiConfig'
+import { getPublicApiUrl } from '../../../../config/apiConfig'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -56,7 +56,7 @@ const getUniversityBadgeLabel = (persona: RectorMember) =>
 const fetchDirectorioFromFastify = async () => {
   pending.value = true
   try {
-    const url = `${PUBLIC_API_URL}/teams?hierarchy_level=1&person_type=board_member&limit=${limit.value}`
+    const url = `${getPublicApiUrl()}/teams?hierarchy_level=1&person_type=board_member&limit=${limit.value}`
     const response = await fetch(url)
 
     if (response.ok) {
@@ -96,7 +96,7 @@ const closeModal = () => {
 }
 
 const injectMockRectores = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
 
   if (!isNuxtEnvironment) {
     items.value = [

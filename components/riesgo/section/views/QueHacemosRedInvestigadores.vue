@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import SectionTitle from '../title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
+import { sanitizeHtml } from '../../../../helpers/sanitize';
 const props = defineProps<{
   data: any
 }>()
@@ -40,7 +41,7 @@ const imageUrl = computed(() => props.data?.imageUrl || '')
           </div>
 
           <div class="need-text-wrap" v-if="text">
-            <p class="need-text" v-html="text"></p>
+            <div class="need-text" v-html="sanitizeHtml(text)"></div>
           </div>
         </div>
       </div>

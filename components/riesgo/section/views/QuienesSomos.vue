@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { formatImageUrl } from '@shared/helpers/url';
+import { sanitizeHtml } from '../../../../helpers/sanitize';
 
 const props = defineProps<{
   data: any
@@ -22,7 +23,7 @@ const handleMouseLeave = () => { isHovered.value = false }
   <section class="about-section">
     <h2 class="section-title" v-if="title">{{ title }}</h2>
     
-    <p class="section-text" v-if="text" v-html="text"></p>
+    <div class="section-text" v-if="text" v-html="sanitizeHtml(text)"></div>
 
     <div 
       class="image-container"

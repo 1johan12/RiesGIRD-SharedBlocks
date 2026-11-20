@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 // 🔥 IMPORTS CENTRALIZADOS SOLICITADOS ASIGNADOS CORRECTAMENTE
-import { PUBLIC_API_URL } from '../../../../config/apiConfig';
+import { getPublicApiUrl } from '../../../../config/apiConfig';
 import { formatImageUrl } from '@shared/helpers/url';
 // import { formatImageUrl } from '../../../../../front/src/helpers/url'
 
@@ -25,6 +25,7 @@ export interface TeamMember {
   last_name: string
   position_name: string
   hierarchy_level: number
+  sort_order?: number
   email: string
   phone?: string | null
   photo_url?: string | null
@@ -117,7 +118,7 @@ const fetchTeamFromFastify = async (universityId: number) => {
   teamMembers.value = []
 
   try {
-    const url = `${PUBLIC_API_URL}/teams?university_id=${universityId}&limit=50&person_type=board_member`;
+    const url = `${getPublicApiUrl()}/teams?university_id=${universityId}&limit=50&person_type=board_member`;
     const response = await fetch(url)
 
     if (response.ok) {
@@ -147,7 +148,13 @@ const sortTeamByHierarchy = (members: TeamMember[]): TeamMember[] => {
     'Persona de Contacto': 3
   }
 
-  return [...members].sort((a, b) => (order[a.type || ''] || 9) - (order[b.type || ''] || 9))
+  return [...members].sort((a, b) => {
+    const roleDiff = (order[a.type || ''] || 9) - (order[b.type || ''] || 9)
+    if (roleDiff !== 0) return roleDiff
+    const aOrder = a.sort_order && a.sort_order > 0 ? a.sort_order : 999999
+    const bOrder = b.sort_order && b.sort_order > 0 ? b.sort_order : 999999
+    return aOrder - bOrder
+  })
 }
 
 const injectMockTeam = () => {

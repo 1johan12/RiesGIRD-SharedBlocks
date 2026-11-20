@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { formatImageUrl } from '@shared/helpers/url';
-import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
+import { getPublicApiUrl } from '../../../../config/apiConfig';
+import { getPostDetailRoute } from '@shared/helpers/sanitize';
 
 const props = defineProps<{
   data: any
@@ -33,8 +34,8 @@ const getCardDate = (dateString?: string) => {
   const date = parseDate(dateString)
   if (!date) return { day: '01', month: 'Enero' }
 
-  const day = date.getDate().toString().padStart(2, '0')
-  const month = capitalize(date.toLocaleString('es-ES', { month: 'long' }))
+  const day = date.getUTCDate().toString().padStart(2, '0')
+  const month = capitalize(date.toLocaleString('es-ES', { month: 'long', timeZone: 'UTC' }))
   return { day, month }
 }
 
@@ -42,8 +43,8 @@ const formatReadableDate = (dateString?: string) => {
   const date = parseDate(dateString)
   if (!date) return 'Marzo 2026'
 
-  const month = capitalize(date.toLocaleString('es-ES', { month: 'long' }))
-  const year = date.getFullYear()
+  const month = capitalize(date.toLocaleString('es-ES', { month: 'long', timeZone: 'UTC' }))
+  const year = date.getUTCFullYear()
   return `${month} ${year}`
 }
 
@@ -66,17 +67,13 @@ const getStatusLabel = (post: any) => {
   return 'Próximamente'
 }
 
-const getDetailLink = (post: any) => {
-  const slug = post?.slug || post?.id
-  return slug ? `/news/${slug}` : '#'
-}
-const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
+const getDetailLink = (post: any) => getPostDetailRoute(post)
 
 const fetchFeedFromFastify = async () => {
   pending.value = true
 
   try {
-    let url = `${api}/news?limit=${limit.value}`
+    let url = `${getPublicApiUrl()}/news?limit=${limit.value}`
     if (postType.value !== 'all') {
       url += `&type=${postType.value}`
     }
@@ -102,7 +99,7 @@ const fetchFeedFromFastify = async () => {
 }
 
 const injectMockData = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
 
   if (!isNuxtEnvironment) {
     items.value = [
@@ -160,7 +157,39 @@ const injectMockData = () => {
   }
 }
 
-watch([limit, postType], fetchFeedFromFastify, { immediate: true })
+if (typeof (globalThis as any).useAsyncData === 'function') {
+  const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
+    () => `eventos-noticias-${postType.value}-${limit.value}`,
+    async () => {
+      try {
+        let url = `${getPublicApiUrl()}/news?limit=${limit.value}`
+        if (postType.value !== 'all') {
+          url += `&type=${encodeURIComponent(postType.value)}`
+        }
+        const response = await fetch(url)
+        if (!response.ok) return []
+        const resData = await response.json()
+        const records = Array.isArray(resData?.data) ? resData.data : Array.isArray(resData) ? resData : []
+        return records.slice(0, limit.value)
+      } catch {
+        return []
+      }
+    },
+    { watch: [limit, postType] }
+  )
+
+  watch(ssrRecords, (newVal) => {
+    if (Array.isArray(newVal) && newVal.length > 0) {
+      items.value = newVal
+    } else {
+      injectMockData()
+    }
+  }, { immediate: true })
+
+  watch(ssrPending, (val) => { pending.value = Boolean(val) }, { immediate: true })
+} else {
+  watch([limit, postType], fetchFeedFromFastify, { immediate: true })
+}
 </script>
 
 <template>

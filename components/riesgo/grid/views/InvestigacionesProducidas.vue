@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, useId } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import { formatImageUrl } from '@shared/helpers/url'
-import { PUBLIC_API_URL } from '../../../../config/apiConfig'
+import { getPublicApiUrl } from '../../../../config/apiConfig'
 
 export interface InvestigationNode {
   id: string | number
@@ -12,6 +12,7 @@ export interface InvestigationNode {
   titulo?: string
   fileUrl?: string
   imageUrl?: string
+  photoUrl?: string
 }
 
 export interface InvestigationsBlockData {
@@ -57,8 +58,7 @@ const fetchResourcesFromFastify = async () => {
       ? `&type=${props.data.typeFilter}` 
       : ''
     
-    const baseUrl = PUBLIC_API_URL || 'https://api.redgirdaccperu.edu.pe/api/public'
-    const url = `${baseUrl}/resources?limit=${limitParam}${typeParam}`
+    const url = `${getPublicApiUrl()}/resources?limit=${limitParam}${typeParam}`
 
     const response = await fetch(url)
     if (response.ok) {
@@ -82,7 +82,7 @@ const fetchResourcesFromFastify = async () => {
 
 // Inyector de respaldo para la vista previa en el SPA de administración
 const injectMockResources = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window)
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment && apiItems.value.length === 0) {
     apiItems.value = [
       {
@@ -129,7 +129,7 @@ const rawItems = computed<InvestigationNode[]>(() => {
 // -----------------------------------------------------------------------------
 const categoriaActiva = ref<string>('all')
 const searchQuery = ref<string>('')
-const searchGradientId = `search-gradient-${Math.random().toString(36).slice(2, 10)}`
+const searchGradientId = `search-gradient-${useId()}`
 
 // Paleta de colores para los divisores (Rojo #E1113F y Azul #274E9D intercalados)
 const colorPalette = ['#E1113F', '#274E9D', '#E1113F', '#274E9D']
@@ -317,8 +317,8 @@ watch([() => props.data?.limit, () => props.data?.typeFilter], () => {
         >
           <div class="memory-block__visual">
             <img
-              v-if="doc.imageUrl"
-              :src="formatImageUrl(doc.imageUrl)"
+              v-if="doc.photoUrl || doc.imageUrl"
+              :src="formatImageUrl(doc.photoUrl || doc.imageUrl)"
               :alt="doc.titulo || 'Documento'"
               class="memory-block__image"
             />

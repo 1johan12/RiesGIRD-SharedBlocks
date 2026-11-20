@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { sanitizeHtml, sanitizeHref } from '../../../../helpers/sanitize';
 
 // ── 🧠 CONTRATOS DE INTERFACES ESTRICTAS DE ALTA INGENIERÍA ──
 export interface ScrollDocItem {
@@ -123,7 +124,7 @@ const formatShortDate = (dateStr: string | undefined) => {
 
                   <div class="table-cell-action">
                     <span class="table-weight-label" v-if="doc.file_size">{{ doc.file_size }}</span>
-                    <a :href="doc.download_url || '#'" class="table-btn-download" :class="index % 2 === 0 ? 'rojo' : 'azul'">
+                    <a :href="sanitizeHref(doc.download_url, '#')" target="_blank" rel="noopener noreferrer" class="table-btn-download" :class="index % 2 === 0 ? 'rojo' : 'azul'">
                       <svg class="table-download-svg" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12l-4.5 4.5m0 0L7.5 12m4.5 4.5V3" />
                       </svg>
@@ -135,7 +136,7 @@ const formatShortDate = (dateStr: string | undefined) => {
               <div 
                 v-else-if="block.type === 'html_raw' && block.htmlContent" 
                 class="html-injected-container-box ql-editor" 
-                v-html="block.htmlContent"
+                v-html="sanitizeHtml(block.htmlContent)"
               ></div>
 
             </div>

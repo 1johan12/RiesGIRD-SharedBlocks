@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{
   data: any
@@ -13,21 +14,6 @@ const logos = computed(() => {
   }
   return [];
 });
-
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return '';
-
-  if (
-    url.startsWith('http') ||
-    url.startsWith('https') ||
-    url.startsWith('data:') ||
-    url.startsWith('/')
-  ) {
-    return url;
-  }
-
-  return `http://127.0.0.1:4000/storage/${url}`;
-};
 </script>
 
 <template>

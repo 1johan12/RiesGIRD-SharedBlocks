@@ -3,7 +3,7 @@ import { ref, watch } from 'vue';
 import type { ScrollHubBlockConfig, ScrollContentBlock, ScrollDocItem } from '../views/AcuerdosScrollHub.vue';
 
 const props = defineProps<{ modelValue: ScrollHubBlockConfig | null }>();
-const emit = defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue', 'select-image']);
 
 const localData = ref<Required<ScrollHubBlockConfig>>({
   titleSection: props.modelValue?.titleSection || 'Repositorio Documental de Acuerdos',
@@ -141,7 +141,12 @@ watch(() => props.modelValue, (newVal) => {
                     <div class="col-6"><input type="text" v-model="doc.category" class="form-control form-control-xs super-small-text text-center" placeholder="Tag"></div>
                     <div class="col-6"><input type="text" v-model="doc.file_size" class="form-control form-control-xs super-small-text text-center font-mono" placeholder="Peso"></div>
                   </div>
-                  <input type="text" v-model="doc.download_url" class="form-control form-control-xs font-mono super-small-text mt-1" placeholder="Ruta link...">
+                  <div class="input-group input-group-xs mt-1">
+                    <input type="text" v-model="doc.download_url" class="form-control font-mono super-small-text" placeholder="Ruta link...">
+                    <button type="button" class="btn btn-outline-danger py-0 px-1.5" title="Seleccionar archivo desde Biblioteca" @click="$emit('select-image', { item: doc, field: 'download_url' })">
+                      <i class="las la-cloud-upload-alt"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
 

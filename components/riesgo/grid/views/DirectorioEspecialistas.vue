@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 // Capa unificada de rutas planas importada desde tu archivo central
-import { PUBLIC_API_URL } from '../../../../config/apiConfig'
+import { getPublicApiUrl } from '../../../../config/apiConfig'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -78,7 +78,7 @@ const cleanImageUrl = (url: string | null | undefined): string => {
 const fetchDirectorioEspecialistas = async () => {
   pending.value = true
   try {
-    const url = `${PUBLIC_API_URL}/teams?person_type=specialist&limit=50`
+    const url = `${getPublicApiUrl()}/teams?person_type=specialist&limit=50`
     const response = await fetch(url)
     console.log('🔥 Fetching especialistas from Fastify:', url, response.status, response.ok)
 
@@ -127,7 +127,7 @@ const verMas = () => {
 }
 
 const injectMockEspecialistas = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment) {
     items.value = [
       {

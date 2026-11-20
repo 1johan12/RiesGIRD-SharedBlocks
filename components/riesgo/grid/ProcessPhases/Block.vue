@@ -43,7 +43,7 @@
             <div
               class="process-phase__period"
               :class="{ 'is-highlighted': card.highlightBackground }"
-              v-html="card.periodText"
+              v-html="sanitizeHtml(card.periodText)"
             />
           </div>
         </article>
@@ -82,6 +82,8 @@
 </template>
 
 <script setup lang="ts">
+import { sanitizeHtml } from '../../../../helpers/sanitize';
+
 interface ProcessCard {
   title: string
   description: string

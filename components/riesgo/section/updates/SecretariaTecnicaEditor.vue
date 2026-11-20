@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{ modelValue: any }>();
 const emit = defineEmits(['update:modelValue', 'select-image']);
@@ -76,7 +77,7 @@ watch(localData, (newVal) => {
             <div 
               @click="$emit('select-image', { item: localData.leader, field: 'photo_url' })" 
               class="media-box border rounded text-center clickable"
-              :style="{ backgroundImage: localData.leader.photo_url ? `url(${localData.leader.photo_url})` : 'none' }"
+              :style="{ backgroundImage: localData.leader.photo_url ? `url(${formatImageUrl(localData.leader.photo_url, '')})` : 'none' }"
             >
               <i v-if="!localData.leader.photo_url" class="las la-user-plus text-muted fs-4"></i>
             </div>
@@ -112,13 +113,13 @@ watch(localData, (newVal) => {
           <div class="row g-2 mt-2">
             <div class="col-6">
               <label class="x-small fw-bold text-muted d-block mb-1">Foto Miembro</label>
-              <div @click="$emit('select-image', { item: member, field: 'photo_url' })" class="media-box border rounded text-center clickable" :style="{ backgroundImage: member.photo_url ? `url(${member.photo_url})` : 'none' }">
+              <div @click="$emit('select-image', { item: member, field: 'photo_url' })" class="media-box border rounded text-center clickable" :style="{ backgroundImage: member.photo_url ? `url(${formatImageUrl(member.photo_url, '')})` : 'none' }">
                 <i v-if="!member.photo_url" class="las la-image text-muted"></i>
               </div>
             </div>
             <div class="col-6">
               <label class="x-small fw-bold text-muted d-block mb-1">Escudo Uni</label>
-              <div @click="$emit('select-image', { item: member, field: 'logoUniversidad' })" class="media-box border rounded text-center clickable" :style="{ backgroundImage: member.logoUniversidad ? `url(${member.logoUniversidad})` : 'none' }">
+              <div @click="$emit('select-image', { item: member, field: 'logoUniversidad' })" class="media-box border rounded text-center clickable" :style="{ backgroundImage: member.logoUniversidad ? `url(${formatImageUrl(member.logoUniversidad, '')})` : 'none' }">
                 <i v-if="!member.logoUniversidad" class="las la-university text-muted"></i>
               </div>
             </div>

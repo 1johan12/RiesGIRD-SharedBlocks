@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import HttpClient from "@/helpers/http-client";
+import { formatImageUrl } from '../../helpers/url';
 import Swal from "sweetalert2";
 import { useAuthStore } from "@/stores/auth"; 
 
@@ -50,21 +51,6 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const currentFolderId = ref<number | null>(null);
 const parentFolderId = ref<number | null>(null);
 const breadcrumbPath = ref<{id: number, name: string}[]>([]);
-
-
-const formatImageUrl = (url: string | null | undefined): string => {
-  if (!url) return 'https://placehold.co/600x400?text=Sin+Imagen';
-  if (url.startsWith('http') && !url.includes('/storage/')) return url;
-
-  let cleanPath = url;
-  if (url.includes('storage/')) {
-    cleanPath = url.split('storage/').pop() || ''; 
-  }
-
-  const baseUrl = import.meta.env.VITE_API_URL?.replace(/\/+$/, "") || ''; 
-  cleanPath = cleanPath.replace('public/', "").replace(/^\/+/, "").replace(/\/+/g, "/"); 
-  return `${baseUrl}/storage/${cleanPath}`;
-};
 
 
 const loadMedia = async () => {

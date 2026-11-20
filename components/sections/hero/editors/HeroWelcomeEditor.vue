@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{ modelValue: any }>();
 const emit = defineEmits(['update:modelValue', 'select-image']);
@@ -52,16 +53,24 @@ const removeItem = (index: number) => localData.value.items.splice(index, 1);
             <label class="x-small d-block mb-2">Imagen Fondo</label>
             <div @click="$emit('select-image', { item: localData, field: 'bgImage' })" 
                  class="media-placeholder border rounded mb-2 clickable"
-                 :style="{ backgroundImage: `url(${localData.bgImage})` }">
+                 :style="{ backgroundImage: localData.bgImage ? `url(${formatImageUrl(localData.bgImage, '')})` : 'none' }">
               <i v-if="!localData.bgImage" class="las la-plus fs-2 text-muted"></i>
+            </div>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-xs btn-outline-primary flex-grow-1" @click="$emit('select-image', { item: localData, field: 'bgImage' })">{{ localData.bgImage ? 'Cambiar' : 'Elegir' }}</button>
+              <button v-if="localData.bgImage" type="button" class="btn btn-xs btn-outline-danger" @click="localData.bgImage = ''"><i class="las la-times"></i></button>
             </div>
           </div>
           <div class="col-6 text-center">
             <label class="x-small d-block mb-2">Imagen Lateral</label>
             <div @click="$emit('select-image', { item: localData, field: 'mainImage' })" 
                  class="media-placeholder border rounded mb-2 clickable"
-                 :style="{ backgroundImage: `url(${localData.mainImage})` }">
+                 :style="{ backgroundImage: localData.mainImage ? `url(${formatImageUrl(localData.mainImage, '')})` : 'none' }">
               <i v-if="!localData.mainImage" class="las la-plus fs-2 text-muted"></i>
+            </div>
+            <div class="d-flex gap-1">
+              <button type="button" class="btn btn-xs btn-outline-primary flex-grow-1" @click="$emit('select-image', { item: localData, field: 'mainImage' })">{{ localData.mainImage ? 'Cambiar' : 'Elegir' }}</button>
+              <button v-if="localData.mainImage" type="button" class="btn btn-xs btn-outline-danger" @click="localData.mainImage = ''"><i class="las la-times"></i></button>
             </div>
           </div>
         </div>

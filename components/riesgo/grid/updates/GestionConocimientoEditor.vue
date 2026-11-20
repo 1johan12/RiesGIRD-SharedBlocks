@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { KnowledgeBlockData, DocumentoAsset, CategoriaTab } from '../views/GestionConocimiento.vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{ modelValue: KnowledgeBlockData | null }>();
 const emit = defineEmits(['update:modelValue', 'select-image']);
@@ -68,7 +69,8 @@ const addDocumentoToActiveTab = () => {
   const nuevoDocumento: DocumentoAsset = {
     tipo: 'PDF',
     titulo: 'Nuevo Lineamiento o Acta Oficial',
-    fileUrl: ''
+    fileUrl: '',
+    imageUrl: ''
   };
 
   localData.value.documentos[activeTabKey.value].push(nuevoDocumento);
@@ -200,6 +202,22 @@ watch(() => props.modelValue, (newVal) => {
               <div class="col-8 pe-3">
                 <label class="super-small fw-bold text-muted mb-0.5">Título o Nombre</label>
                 <input type="text" v-model="doc.titulo" class="form-control form-control-xs fw-semibold">
+              </div>
+
+              <div class="col-12 mt-1">
+                <label class="super-small fw-bold text-primary d-block mb-0.5">Imagen / Portada del Documento</label>
+                <div class="input-group input-group-xs mb-1">
+                  <input type="text" v-model="doc.imageUrl" class="form-control font-mono super-small-text bg-white" placeholder="URL o elige imagen...">
+                  <button type="button" class="btn btn-outline-primary py-0 px-1.5" title="Seleccionar imagen" @click="$emit('select-image', { item: doc, field: 'imageUrl' })">
+                    <i class="las la-image"></i>
+                  </button>
+                  <button v-if="doc.imageUrl" type="button" class="btn btn-outline-secondary py-0 px-1.5" title="Quitar imagen" @click="doc.imageUrl = ''">
+                    <i class="las la-times"></i>
+                  </button>
+                </div>
+                <div v-if="doc.imageUrl" class="border rounded bg-white p-1 text-center mb-1">
+                  <img :src="formatImageUrl(doc.imageUrl)" alt="Portada" style="max-height: 48px; object-fit: contain;">
+                </div>
               </div>
 
               <div class="col-12 mt-1">

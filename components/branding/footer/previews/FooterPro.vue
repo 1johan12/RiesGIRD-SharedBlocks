@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { sanitizeHref } from '../../../../helpers/sanitize';
 
 // --- CONTRATOS DE TIPADO ESTRICTOS ---
 interface LinkItem {
@@ -31,13 +32,14 @@ const props = defineProps<{
   linkComponent?: any; // Permite inyectar NuxtLink o RouterLink desde el orquestador
 }>();
 
-// Mapeador reactivo defensivo para decidir la etiqueta de enrutamiento sin romper el SPA
+// Mapeador reactivo defensivo para decidir la etiqueta de enrutamiento sin romper el SPA ni hidratación SSR
 const linkTag = computed(() => {
   if (props.linkComponent) return props.linkComponent;
-  // Detecta defensivamente si corre en el entorno de Nuxt 3 o Vue 3 tradicional
-  const isNuxt = typeof window !== 'undefined' && ('__NUXT__' in window || 'NuxtLink' in window);
+  const isNuxt = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && '__NUXT__' in window);
   return isNuxt ? 'NuxtLink' : 'router-link';
 });
+
+const isExternalUrl = (url?: string) => Boolean(url && /^(https?:\/\/|mailto:|tel:)/i.test(url.trim()));
 
 // Helper reactivo que parcha nulos e inyecta los tokens cromáticos de la maqueta
 const safeConfig = computed(() => ({
@@ -90,7 +92,16 @@ const safeConfig = computed(() => ({
           <h3 class="column-title">{{ col.title }}</h3>
           <ul class="links-list" v-if="col.links && col.links.length > 0">
             <li v-for="(link, li) in col.links" :key="li">
-              <component :is="linkTag" :to="link.url" class="interactive-anchor">
+              <a
+                v-if="isExternalUrl(link.url)"
+                :href="sanitizeHref(link.url)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="interactive-anchor"
+              >
+                {{ link.text }}
+              </a>
+              <component v-else :is="linkTag" :to="sanitizeHref(link.url, '/')" class="interactive-anchor">
                 {{ link.text }}
               </component>
             </li>

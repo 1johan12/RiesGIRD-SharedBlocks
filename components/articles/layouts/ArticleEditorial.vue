@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { formatImageUrl } from '../../../helpers/url';
+import { sanitizeHtml } from '../../../helpers/sanitize';
 
 const props = defineProps({
     data: { type: Object, required: true }
@@ -39,14 +40,15 @@ const props = defineProps({
 
 
 const bodyData = computed(() => {
-    let parsed = props.data.body || props.data.content_blocks;
-    if (typeof parsed === 'string') {
-        try { parsed = JSON.parse(parsed); } catch (e) { parsed = {}; }
+    let parsed: any = props.data.body || props.data.content_blocks;
+    for (let i = 0; i < 2 && typeof parsed === 'string'; i++) {
+        try { parsed = JSON.parse(parsed); } catch { break; }
     }
+    if (typeof parsed === 'string') return { html: parsed };
     return parsed || {};
 });
 
-const htmlContent = computed(() => bodyData.value.html || '');
+const htmlContent = computed(() => sanitizeHtml(bodyData.value.html || ''));
 const authorName = computed(() => bodyData.value.author?.name || '');
 const authorAvatar = computed(() => bodyData.value.author?.avatar || '');
 const readTime = computed(() => bodyData.value.extra?.read_time || '5 min');

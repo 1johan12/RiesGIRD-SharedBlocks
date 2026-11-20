@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 // 🎯 Inyección obligatoria de tu Modal de Autoridades Intacto
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
-import { useUniversitiesFeed } from '../../composables/useUniversitiesFeed.ts'
+import { useUniversitiesFeed } from '../../composables/useUniversitiesFeed'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -114,7 +114,7 @@ const fetchDirectorioMiembros = async () => {
 }
 
 const injectMockUniversidades = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment) {
     items.value = [
       { id: 1, name: 'San Cristóbal de Huamanga', siglas: 'UNSCH', logo_url: 'https://upload.wikimedia.org/wikipedia/commons/4/46/Escudo_de_la_Universidad_Nacional_Mayor_de_San_Marcos.svg', type: 'public' },

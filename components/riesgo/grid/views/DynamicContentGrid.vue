@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { formatImageUrl } from '@shared/helpers/url';
+import { sanitizeHref } from '../../../../helpers/sanitize';
 
 export interface GridItemAsset {
   id: string | number;
@@ -61,10 +62,14 @@ const getSectionBadgeClass = computed(() => {
       </div>
 
       <div class="dynamic-cards-grid-layout">
-        <a
+        <component
           v-for="(item, i) in items"
           :key="item.url_enlace ? `${i}-${item.url_enlace}` : i"
-          :href="item.url_enlace || '#'"
+          :is="item.url_enlace && item.url_enlace.startsWith('/') ? 'router-link' : 'a'"
+          :to="item.url_enlace && item.url_enlace.startsWith('/') ? sanitizeHref(item.url_enlace) : undefined"
+          :href="!(item.url_enlace && item.url_enlace.startsWith('/')) ? sanitizeHref(item.url_enlace, '#') : undefined"
+          :target="item.url_enlace && !item.url_enlace.startsWith('/') ? '_blank' : undefined"
+          :rel="item.url_enlace && !item.url_enlace.startsWith('/') ? 'noopener noreferrer' : undefined"
           class="feed-premium-card shadow-soft"
           :class="{ 'card-unlinked': !item.url_enlace }"
         >
@@ -109,7 +114,7 @@ const getSectionBadgeClass = computed(() => {
             </div>
 
           </div>
-        </a>
+        </component>
       </div>
 
     </div>

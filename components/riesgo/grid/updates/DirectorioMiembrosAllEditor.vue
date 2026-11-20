@@ -8,6 +8,7 @@ const emit = defineEmits(['update:modelValue']);
 const localData = ref({
   title: props.modelValue?.title || 'Directorio de Miembros',
   limit: props.modelValue?.limit || 8,
+  forcedType: props.modelValue?.forcedType || 'all',
   actionText: props.modelValue?.actionText || 'Ver Más',
   actionUrl: props.modelValue?.actionUrl || ''          
 });
@@ -19,6 +20,7 @@ watch(() => props.modelValue, (newVal) => {
     localData.value = {
       title: newVal.title || 'Directorio de Miembros',
       limit: newVal.limit || 8,
+      forcedType: newVal.forcedType || 'all',
       actionText: newVal.actionText || 'Ver Más',
       actionUrl: newVal.actionUrl || ''
     };
@@ -73,6 +75,16 @@ watch(localData, (newVal) => {
     <div class="card border-0 shadow-sm">
       <div class="card-body">
         <h6 class="fw-bold mb-3 text-primary"><i class="las la-server"></i> Filtro de Servidor</h6>
+        <div class="mb-3">
+          <label class="small text-muted mb-1 fw-bold">Tipo de Institución</label>
+          <select v-model="localData.forcedType" class="form-select form-select-sm fw-bold text-secondary">
+            <option value="all">Todas</option>
+            <option value="public">Universidades Públicas</option>
+            <option value="private">Universidades Privadas</option>
+            <option value="institute">Institutos</option>
+            <option value="foreign">Extranjeras</option>
+          </select>
+        </div>
         <div class="mb-1">
           <label class="small text-muted mb-1 fw-bold">Límite Inicial de Universidades</label>
           <select v-model="localData.limit" class="form-select form-select-sm fw-bold text-secondary">

@@ -2,7 +2,8 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
-import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
+import { getPublicApiUrl } from '../../../../config/apiConfig';
+import { getPostDetailRoute } from '../../../../helpers/sanitize';
 
 const props = defineProps<{
   data: any
@@ -20,7 +21,7 @@ const postType = computed<string>(() => {
 const items = ref<any[]>([])
 const pending = ref(false)
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = computed(() => Math.min(Math.max(Number(props.data?.limitFetch ?? props.data?.limit) || 10, 1), 50))
 const isNoMoreRecords = ref(false) 
 
 const getCardAccent = (index: number) => (index % 2 === 0 ? '#e1113f' : '#274e9d')
@@ -46,8 +47,8 @@ const getCardDate = (dateString?: string) => {
 const formatReadableDate = (dateString?: string) => {
   const date = parseDate(dateString)
   if (!date) return 'Marzo 2026'
-  const month = capitalize(date.toLocaleString('es-ES', { month: 'long' }))
-  return `${month} ${date.getFullYear()}`
+  const month = capitalize(date.toLocaleString('es-ES', { month: 'long', timeZone: 'UTC' }))
+  return `${month} ${date.getUTCFullYear()}`
 }
 
 const getStatusLabel = (post: any) => {
@@ -62,10 +63,8 @@ const getStatusLabel = (post: any) => {
 
 const getDetailLink = (post: any) => {
   const slug = post?.slug || post?.id
-  return slug ? `/${postType.value}/${slug}` : '#'
+  return slug ? getPostDetailRoute(post?.type || postType.value, slug) : '#'
 }
-
-const apiBaseUrl = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'
 
 const fetchFeedFromFastify = async (isAppendMode = false) => {
   if (pending.value) return
@@ -78,7 +77,7 @@ const fetchFeedFromFastify = async (isAppendMode = false) => {
   }
 
   try {
-    const url = `${apiBaseUrl}/news?page=${currentPage.value}&limit=${itemsPerPage}&type=${postType.value}`
+    const url = `${getPublicApiUrl()}/news?page=${currentPage.value}&limit=${itemsPerPage.value}&type=${postType.value}`
     
     const response = await fetch(url)
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
@@ -92,7 +91,7 @@ const fetchFeedFromFastify = async (isAppendMode = false) => {
       } else {
         items.value = records
       }
-      if (records.length < itemsPerPage) {
+      if (records.length < itemsPerPage.value) {
         isNoMoreRecords.value = true 
       }
     } else {
@@ -129,7 +128,7 @@ const initInfiniteScroll = () => {
 }
 
 const injectMockData = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment) {
     const mocks = []
     for (let i = 1; i <= 15; i++) {
@@ -151,7 +150,7 @@ const injectMockData = () => {
   }
 }
 
-watch([postType], () => {
+watch([postType, itemsPerPage], () => {
   fetchFeedFromFastify(false)
 }, { immediate: true })
 
@@ -183,7 +182,7 @@ onUnmounted(() => {
           class="feed-card-item animate-card-fade"
           :style="{ '--accent-line': getCardAccent(index) }"
         >
-          <a :href="getDetailLink(item)" class="feed-card-link">
+          <router-link :to="getDetailLink(item)" class="feed-card-link">
             <div class="card-top-row">
               <span class="badge-esan"><span>ESAN</span></span>
               <span class="badge-type">
@@ -204,10 +203,10 @@ onUnmounted(() => {
             <div class="container__content">
               <span class="card-top-meta-date-label">
                 <i class="bi bi-calendar3 me-1"></i>
-                {{ formatReadableDate(item?.start_date) }}
+                {{ formatReadableDate(item?.start_date || item?.created_at) }}
                 <span class="meta-divider">|</span>
                 <i class="bi" :class="item?.modality === 'in_person' ? 'bi-building' : 'bi-laptop'"></i>
-                {{ item?.modality === 'in_person' ? 'Presencial' : 'Virtual' }}
+                {{ item?.modality === 'in_person' ? 'Presencial' : item?.modality === 'hybrid' ? 'Híbrida' : 'Virtual' }}
               </span>
 
               <h3 class="card-core-headline-title" :title="item?.title || 'Sin título'">
@@ -232,7 +231,7 @@ onUnmounted(() => {
                 Sin imagen
               </div>
             </div>
-          </a>
+          </router-link>
 
           <div
             class="card-bottom-accent-hairline"
@@ -248,7 +247,7 @@ onUnmounted(() => {
       <div ref="sentinelAnchor" class="scroll-infinite-sentinel-zone">
         <div v-if="pending" class="sentinel-spinner-layout">
           <div class="spinner-loader-ring"></div>
-          <span class="spinner-loader-text-label">Cargando lote de 10 elementos...</span>
+          <span class="spinner-loader-text-label">Cargando lote de {{ itemsPerPage }} elementos...</span>
         </div>
         <div v-if="isNoMoreRecords && items.length > 0" class="sentinel-end-text">
           ✨ Archivo completo desplegado.

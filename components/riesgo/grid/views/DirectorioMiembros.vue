@@ -114,7 +114,7 @@ const fetchDirectorioMiembros = async () => {
 }
 
 const injectMockUniversidades = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment) {
     items.value = [
       { id: 1, name: 'San Cristóbal de Huamanga', siglas: 'UNSCH', logo_url: null, type: 'public' },

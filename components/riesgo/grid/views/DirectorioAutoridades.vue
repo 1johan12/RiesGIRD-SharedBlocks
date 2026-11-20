@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 // Capa unificada de rutas planas importada desde tu archivo central
-import { PUBLIC_API_URL } from '../../../../config/apiConfig'
+import { getPublicApiUrl } from '../../../../config/apiConfig'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -62,7 +62,7 @@ const selectedRector = ref<AuthorityMember | null>(null)
 const fetchDirectorioAutoridades = async () => {
   pending.value = true
   try {
-    const url = `${PUBLIC_API_URL}/teams?hierarchy_level=1&person_type=board_member&limit=100`
+    const url = `${getPublicApiUrl()}/teams?hierarchy_level=1&person_type=board_member&limit=100`
     const response = await fetch(url)
 
     if (response.ok) {
@@ -130,7 +130,7 @@ const verMas = () => {
 }
 
 const injectMockDirectorio = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment) {
     items.value = [
       {

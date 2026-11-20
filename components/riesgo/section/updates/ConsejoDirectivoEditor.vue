@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{ modelValue: any }>();
 const emit = defineEmits(['update:modelValue', 'select-image']);
@@ -113,9 +114,13 @@ watch(localData, (newVal) => {
               <div 
                 @click="$emit('select-image', { item: member, field: 'photo_url' })" 
                 class="media-placeholder border rounded clickable-box text-center"
-                :style="{ backgroundImage: member.photo_url ? `url(${member.photo_url})` : 'none' }"
+                :style="{ backgroundImage: member.photo_url ? `url(${formatImageUrl(member.photo_url, '')})` : 'none' }"
               >
                 <i v-if="!member.photo_url" class="las la-user-plus text-muted fs-4"></i>
+              </div>
+              <div class="d-flex gap-1 mt-1">
+                <button type="button" class="btn btn-xs btn-outline-primary flex-grow-1" @click="$emit('select-image', { item: member, field: 'photo_url' })">{{ member.photo_url ? 'Cambiar' : 'Elegir' }}</button>
+                <button v-if="member.photo_url" type="button" class="btn btn-xs btn-outline-danger" @click="member.photo_url = ''"><i class="las la-times"></i></button>
               </div>
             </div>
 

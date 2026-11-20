@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { formatImageUrl } from '../../../../helpers/url';
 
 const props = defineProps<{
   data: any
@@ -12,13 +13,6 @@ const subTitle = computed(() => props.data?.subTitle || 'Maestría Conjunta en G
 const highlightLabel = computed(() => props.data?.highlightLabel || 'El Modelo de Éxito:');
 const text = computed(() => props.data?.text || 'Un claro ejemplo de nuestra capacidad de articulación es la alianza entre la Universidad Nacional de Ingeniería (UNI) aportando el rigor técnico, la Universidad ESAN aportando la visión en gestión pública y negocios, y el Ministerio de la Producción (PRODUCE) garantizando la aplicabilidad en el sector estatal.');
 const bannerText = computed(() => props.data?.bannerText || 'Esta sinergia demuestra que el trabajo en red permite crear programas de posgrado de altísimo nivel, formando funcionarios y especialistas con una visión completa y multidisciplinaria.');
-
-// Helper defensivo para formatear rutas multimedia locales o remotas
-const formatImageUrl = (url: string | undefined): string => {
-  if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `http://127.0.0.1:4000/storage/${url}`; // Ajustado a tu puerto local de Fastify
-};
 </script>
 
 <template>

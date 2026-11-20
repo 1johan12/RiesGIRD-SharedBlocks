@@ -6,6 +6,7 @@ const props = defineProps<{ modelValue: HubMegasectionConfig | null }>();
 const emit = defineEmits(['update:modelValue']);
 
 const localData = ref<Required<HubMegasectionConfig>>({
+  id: props.modelValue?.id || 'hub_main',
   showSlider: props.modelValue?.showSlider ?? true,
   sliderTitle: props.modelValue?.sliderTitle || 'Publicaciones Destacadas',
   grids: Array.isArray(props.modelValue?.grids) 

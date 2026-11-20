@@ -32,17 +32,22 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatImageUrl } from '../../../../helpers/url'
 
 const props = defineProps<{
   data: any
 }>()
 
+const resolvedBgImage = computed(() =>
+  props.data?.backgroundImage ? formatImageUrl(props.data.backgroundImage, '') : ''
+)
+
 const heroStyle = computed(() => ({
-  backgroundImage: props.data.backgroundImage
-    ? `url(${props.data.backgroundImage})`
+  backgroundImage: resolvedBgImage.value
+    ? `url("${resolvedBgImage.value}")`
     : 'none',
 
-  minHeight: props.data.height  || '500px'
+  minHeight: props.data?.height || '500px'
 }))
 </script>
 

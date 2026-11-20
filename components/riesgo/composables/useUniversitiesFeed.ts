@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { PUBLIC_API_URL } from '../../../config/apiConfig.ts';
+import { getPublicApiUrl } from '../../../config/apiConfig';
 
 // ── 🧠 CONTRATO DE INTERFAZ ESTRICTO
 export interface UniversityEntity {
@@ -17,7 +17,7 @@ export function useUniversitiesFeed() {
   const fetchDirectorio = async (forcedType: string) => {
     pending.value = true
     try {
-      let url = `${PUBLIC_API_URL}/universities?limit=100`
+      let url = `${getPublicApiUrl()}/universities?limit=100`
       
       if (forcedType !== 'all') {
         url += `&type=${forcedType}`

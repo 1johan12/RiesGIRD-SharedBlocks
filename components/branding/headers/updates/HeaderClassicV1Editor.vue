@@ -123,7 +123,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import HttpClient from '@/helpers/http-client';
+import HttpClient from '../../../../helpers/http-client';
 
 const props = defineProps({
     modelValue: { type: Object, required: true }

@@ -2,8 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import { formatImageUrl } from '@shared/helpers/url';
-import { PUBLIC_API_URL } from '../../../../config/apiConfig.ts';
-const api = PUBLIC_API_URL || 'http://127.0.0.1:4000/api/public'; 
+import { getPublicApiUrl } from '../../../../config/apiConfig';
 
 
 interface BlockData {
@@ -60,7 +59,7 @@ const aliadosFiltrados = computed(() => {
 const fetchAliadosFromFastify = async () => {
   pending.value = true
   try {
-    const url = `${api}/partners?limit=${limit.value}`
+    const url = `${getPublicApiUrl()}/partners?limit=${limit.value}`
     const response = await fetch(url)
 
     if (response.ok) {
@@ -78,7 +77,7 @@ const fetchAliadosFromFastify = async () => {
 }
 
 const injectMockAliados = () => {
-  const isNuxtEnvironment = typeof window !== 'undefined' && '__NUXT__' in window
+  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
   if (!isNuxtEnvironment) {
     items.value = [
       {

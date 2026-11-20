@@ -6,19 +6,28 @@ const props = defineProps({
 })
 
 const emit = defineEmits([
-  'update:modelValue'
+  'update:modelValue',
+  'select-image'
 ])
 
-const localData = ref(
-  JSON.parse(JSON.stringify(props.modelValue))
-)
+const buildState = (val: any) => ({
+  titleRequirements: val?.titleRequirements || '',
+  requirements: Array.isArray(val?.requirements) ? JSON.parse(JSON.stringify(val.requirements)) : [],
+  titleDocuments: val?.titleDocuments || '',
+  documents: Array.isArray(val?.documents) ? JSON.parse(JSON.stringify(val.documents)) : [],
+  buttonText: val?.buttonText || '',
+  buttonUrl: val?.buttonUrl || ''
+})
+
+const localData = ref(buildState(props.modelValue))
 
 watch(
   () => props.modelValue,
   (value) => {
-    localData.value = JSON.parse(
-      JSON.stringify(value)
-    )
+    const incoming = buildState(value)
+    if (JSON.stringify(incoming) !== JSON.stringify(localData.value)) {
+      localData.value = incoming
+    }
   },
   { deep: true }
 )
@@ -123,14 +132,24 @@ const removeDocument = (index: number) => {
         placeholder="Descripción"
       >
 
-      <input
-        v-model="doc.file"
-        class="form-control"
-        placeholder="URL archivo"
-      >
+      <div class="input-group input-group-sm mb-2">
+        <input
+          v-model="doc.file"
+          class="form-control"
+          placeholder="URL archivo"
+        >
+        <button
+          type="button"
+          class="btn btn-outline-primary"
+          title="Seleccionar o subir archivo"
+          @click="$emit('select-image', { item: doc, field: 'file' })"
+        >
+          <i class="las la-cloud-upload-alt"></i>
+        </button>
+      </div>
 
       <button
-        class="btn btn-danger btn-sm mt-2"
+        class="btn btn-danger btn-sm mt-1"
         @click="removeDocument(Number(index))"
       >
         Eliminar
@@ -152,11 +171,21 @@ const removeDocument = (index: number) => {
       placeholder="Texto botón"
     >
 
-    <input
-      v-model="localData.buttonUrl"
-      class="form-control"
-      placeholder="URL botón"
-    >
+    <div class="input-group">
+      <input
+        v-model="localData.buttonUrl"
+        class="form-control"
+        placeholder="URL botón"
+      >
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        title="Seleccionar archivo desde Biblioteca"
+        @click="$emit('select-image', { item: localData, field: 'buttonUrl' })"
+      >
+        <i class="las la-folder-open"></i>
+      </button>
+    </div>
 
   </div>
 </template>

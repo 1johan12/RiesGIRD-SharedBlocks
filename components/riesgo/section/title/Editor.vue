@@ -16,6 +16,8 @@ const localData = ref({
   gap: props.modelValue?.gap || 40,
   paddingTop: props.modelValue?.paddingTop || 0,
   paddingBottom: props.modelValue?.paddingBottom || 0,
+  fontSizeTitle: props.modelValue?.fontSizeTitle || 28,
+  fontSize: props.modelValue?.fontSize || 16,
   backgroundColor: props.modelValue?.backgroundColor || 'transparent'
 })
 
@@ -130,6 +132,17 @@ watch(
             type="number"
             class="form-control form-control-sm"
           >
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="small text-muted">Tamaño título (px)</label>
+            <input v-model.number="localData.fontSizeTitle" type="number" min="14" max="72" class="form-control form-control-sm">
+          </div>
+          <div class="col-6">
+            <label class="small text-muted">Tamaño texto (px)</label>
+            <input v-model.number="localData.fontSize" type="number" min="12" max="36" class="form-control form-control-sm">
+          </div>
         </div>
 
         <div>

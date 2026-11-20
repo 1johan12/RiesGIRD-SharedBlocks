@@ -3,22 +3,23 @@ import { computed, ref, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import { formatImageUrl } from '@shared/helpers/url'
 
-type CategoriaTab = {
+export type CategoriaTab = {
   label: string
   value: string
   color?: string
 }
 
-type DocumentoItem = {
+export type DocumentoItem = {
   tipo?: string
   titulo?: string
   fileUrl?: string
   imageUrl?: string
 }
+export type DocumentoAsset = DocumentoItem
 
-type DocumentosDictionary = Record<string, DocumentoItem[]>
+export type DocumentosDictionary = Record<string, DocumentoItem[]>
 
-type KnowledgeBlockData = {
+export type KnowledgeBlockData = {
   title?: string
   introText?: string
   categorias?: CategoriaTab[]
