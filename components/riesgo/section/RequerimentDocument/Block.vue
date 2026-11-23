@@ -12,13 +12,13 @@
               <i class="bi bi-envelope requirement-document__heading-icon" />
             </div>
             <h2 class="requirement-document__title">
-              {{ data.titleRequirements }}
+              {{ data?.titleRequirements || '' }}
             </h2>
           </div>
 
           <div class="requirement-document__items">
             <div
-              v-for="(item, index) in data.requirements"
+              v-for="(item, index) in (data?.requirements || [])"
               :key="index"
               class="requirement-document__requirement"
             >
@@ -43,13 +43,13 @@
             </div>
 
             <h2 class="requirement-document__title">
-              {{ data.titleDocuments }}
+              {{ data?.titleDocuments || '' }}
             </h2>
           </div>
 
           <div class="requirement-document__items">
             <a
-              v-for="(doc, index) in data.documents"
+              v-for="(doc, index) in (data?.documents || [])"
               :key="index"
               :href="doc.file"
               target="_blank"
@@ -86,12 +86,12 @@
 
       <div class="requirement-document__footer">
         <a
-          :href="data.buttonUrl"
+          :href="data?.buttonUrl || '#'"
           target="_blank"
           rel="noopener noreferrer"
           class="requirement-document__button"
         >
-          {{ data.buttonText }}
+          {{ data?.buttonText || '' }}
         </a>
       </div>
 

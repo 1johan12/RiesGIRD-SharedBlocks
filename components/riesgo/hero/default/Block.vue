@@ -11,20 +11,20 @@
         id="hero-title"
         class="hero__title"
       >
-        {{ data.title }}
+        {{ data?.title || '' }}
       </h1>
 
       <p
-        v-if="data.subtitle"
+        v-if="data?.subtitle"
         class="hero__subtitle"
       >
-        {{ data.subtitle }}
+        {{ data?.subtitle }}
       </p>
     </div>
 
     <div class="hero__wave">
       <svg viewBox="0 0 1440 140" preserveAspectRatio="none">
-        <path :fill="data.waveColor || '#F2F7FF'" d=" M0,65 C180,85 340,100 520,90 C700,80 850,45 1020,55 C1180,70 1280,85 1440,90 L1440,180 L0,180 Z " />
+        <path :fill="data?.waveColor || '#F2F7FF'" d=" M0,65 C180,85 340,100 520,90 C700,80 850,45 1020,55 C1180,70 1280,85 1440,90 L1440,180 L0,180 Z " />
       </svg>
     </div>
   </section>

@@ -8,36 +8,36 @@ const props = defineProps<{
 
 <template>
   <section class="hero-dpa" :style="{ 
-    backgroundImage: data.bgImage ? `url(${data.bgImage})` : 'none',
-    color: data.textColor || '#ffffff',
+    backgroundImage: data?.bgImage ? `url(${data.bgImage})` : 'none',
+    color: data?.textColor || '#ffffff',
   }">
-    <div class="hero-overlay" :style="{ opacity: data.overlayOpacity ?? 0.9 }"></div>
+    <div class="hero-overlay" :style="{ opacity: data?.overlayOpacity ?? 0.9 }"></div>
 
     <div class="hero-container">
       
       <div class="hero-content">
-        <h1 class="hero-title" v-if="data.title" :style="{ color: data.textColor || '#ffffff' }">{{ data.title }}</h1>
-        <p class="hero-subtitle" v-if="data.subtitle" :style="{ color: data.textColor || '#ffffff' }">{{ data.subtitle }}</p>
+        <h1 class="hero-title" v-if="data?.title" :style="{ color: data?.textColor || '#ffffff' }">{{ data.title }}</h1>
+        <p class="hero-subtitle" v-if="data?.subtitle" :style="{ color: data?.textColor || '#ffffff' }">{{ data.subtitle }}</p>
         
-        <ul class="hero-list" v-if="data.items?.length">
+        <ul class="hero-list" v-if="data?.items?.length">
           <li v-for="(item, i) in data.items" :key="i">
             <i class="las la-check-circle"></i> {{ item }}
           </li>
         </ul>
 
         <div class="hero-actions">
-          <a v-if="data.primaryBtnText" :href="sanitizeHref(data.primaryBtnUrl)" 
-             class="btn-dpa" :style="{ backgroundColor: data.btnColor || '#ff2b2b' }">
+          <a v-if="data?.primaryBtnText" :href="sanitizeHref(data.primaryBtnUrl)" 
+             class="btn-dpa" :style="{ backgroundColor: data?.btnColor || '#ff2b2b' }">
             {{ data.primaryBtnText }}
           </a>
-          <a v-if="data.secondaryBtnText" :href="sanitizeHref(data.secondaryBtnUrl)" 
-             class="btn-dpa" :style="{ backgroundColor: data.btnColor || '#ff2b2b' }">
+          <a v-if="data?.secondaryBtnText" :href="sanitizeHref(data.secondaryBtnUrl)" 
+             class="btn-dpa" :style="{ backgroundColor: data?.btnColor || '#ff2b2b' }">
             {{ data.secondaryBtnText }}
           </a>
         </div>
       </div>
 
-      <div class="hero-image-wrapper" v-if="data.mainImage">
+      <div class="hero-image-wrapper" v-if="data?.mainImage">
         <div class="cyan-glow"></div>
         <img :src="data.mainImage" alt="Hero Featured" class="hero-main-img">
       </div>

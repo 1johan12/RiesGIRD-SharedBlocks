@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import {formatImageUrl} from '@shared/helpers/url';
+import { formatImageUrl } from '../../../../helpers/url';
 
 // ── 🧠 CONTRATOS DE INTERFACES ESTRICTAS DE ALTA INGENIERÍA ──
 export interface SlideNode {

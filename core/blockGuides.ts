@@ -52,7 +52,7 @@ export const BLOCK_GUIDES: Record<string, BlockGuideInfo> = {
     recommendedMaxPerPage: 2,
   },
   QuienesSomos: {
-    description: 'Sección institucional con texto enriquecido e imagen lateral.',
+    description: 'Sección institucional con título, descripción opcional (v-if) e imagen o video de YouTube en modal con lazy-loading.',
     sourceType: 'static',
     weight: 1,
   },

@@ -2,7 +2,7 @@
   <section class="process-phases">
     <header class="process-phases__header">
       <h2 class="process-phases__title">
-        {{ props.data.title }}
+        {{ props.data?.title || '' }}
       </h2>
 
       <div class="process-phases__underline" />
@@ -10,7 +10,7 @@
 
     <div class="process-phases__timeline" role="list">
       <template
-        v-for="(card, index) in props.data.cards"
+        v-for="(card, index) in (props.data?.cards || [])"
         :key="`${index}-${card.title}`"
       >
         <article
@@ -48,7 +48,7 @@
           </div>
         </article>
 <div
-  v-if="index < props.data.cards.length - 1"
+  v-if="index < (props.data?.cards?.length || 0) - 1"
   class="process-phase__connector"
   aria-hidden="true"
 >

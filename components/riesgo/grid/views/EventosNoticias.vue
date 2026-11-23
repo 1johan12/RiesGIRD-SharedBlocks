@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { formatImageUrl } from '@shared/helpers/url';
+import { formatImageUrl } from '../../../../helpers/url';
 import { getPublicApiUrl } from '../../../../config/apiConfig';
-import { getPostDetailRoute } from '@shared/helpers/sanitize';
+import { getPostDetailRoute } from '../../../../helpers/sanitize';
 
 const props = defineProps<{
   data: any

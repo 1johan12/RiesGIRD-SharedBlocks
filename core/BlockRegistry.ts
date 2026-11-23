@@ -172,7 +172,7 @@ export const BLOCK_REGISTRY: Record<string, any> = {
         }
     },
     QuienesSomos: {
-        label: '👥 Quiénes Somos (Institucional)',
+        label: '👥 Quiénes Somos / Video Institucional',
         icon: 'las la-users',
         group: 'Institucional',
         isBoxed: true,
@@ -181,7 +181,9 @@ export const BLOCK_REGISTRY: Record<string, any> = {
         initialData: {
             title: '¿Quiénes somos?',
             text: 'La Red Interuniversitaria <strong>RIESGIRD-ACC Perú</strong> es un espacio de articulación académica que reúne a universidades comprometidas con la gestión integral del riesgo de desastres y la adaptación al cambio climático. Su labor se centra en promover la incorporación transversal de estos enfoques en la gobernanza, formación, investigación y responsabilidad social universitaria, considerando las particularidades territoriales.',
-            imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800'
+            mediaType: 'image',
+            imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&q=80&w=800',
+            videoUrl: ''
         }
     },
     MisionVision: {

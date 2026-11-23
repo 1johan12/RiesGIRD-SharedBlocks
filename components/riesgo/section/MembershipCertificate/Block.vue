@@ -9,20 +9,20 @@
 
         <div class="membership-certificate__content">
           <h3 class="membership-certificate__title">
-            {{ data.title }}
+            {{ data?.title || '' }}
           </h3>
 
           <p class="membership-certificate__description">
-            {{ data.description }}
+            {{ data?.description || '' }}
           </p>
 
           <a
-            :href="data.buttonUrl"
+            :href="data?.buttonUrl || '#'"
             target="_blank"
             rel="noopener noreferrer"
             class="membership-certificate__button"
           >
-            {{ data.buttonText }}
+            {{ data?.buttonText || '' }}
 
             <i class="bi bi-arrow-right-short" />
           </a>

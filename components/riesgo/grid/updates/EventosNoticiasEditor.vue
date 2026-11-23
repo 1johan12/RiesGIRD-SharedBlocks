@@ -43,9 +43,11 @@ watch(localData, (newVal) => {
         <div class="mb-3">
           <label class="small text-muted mb-1 fw-bold">Filtrar por Tipo</label>
           <select v-model="localData.postType" class="form-select form-select-sm fw-medium">
-            <option value="all">📁 Todo (Eventos y Noticias)</option>
+            <option value="all">📁 Todo (Noticias, Eventos, Asambleas)</option>
             <option value="event">📅 Solo Eventos / Foros</option>
+            <option value="assemblies">👥 Solo Asambleas</option>
             <option value="news">📰 Solo Noticias / Artículos</option>
+            <option value="calls">📣 Solo Convocatorias</option>
           </select>
         </div>
 
