@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import { useUniversitiesFeed } from '../../composables/useUniversitiesFeed'
+import { useDirectoryPagination } from '../../composables/useDirectoryPagination'
 // 🔥 CORREGIDO: Importación del ayudante global para evitar duplicación de URLs
 import { formatImageUrl } from '@shared/helpers/url';
 
@@ -32,17 +33,16 @@ const props = defineProps<{
 }>()
 
 const title = computed(() => props.data?.title || 'Directorio de Miembros')
-const initialLimit = computed(() => Number(props.data?.limit) || 8)
 const forcedType = computed(() => props.data?.forcedType || 'all')
 
 const actionText = computed(() => props.data?.actionText || 'Ver Más')
-const actionUrl = computed(() => props.data?.actionUrl || '#')
+const actionUrl = computed(() => String(props.data?.actionUrl || '').trim())
+const hasActionUrl = computed(() => Boolean(actionUrl.value && actionUrl.value !== '#'))
 
 const linkTag = computed(() => props.linkComponent || 'router-link')
 
 const { items, pending, fetchDirectorio } = useUniversitiesFeed()
 
-const limitRender = ref(initialLimit.value)
 const filtroNombre = ref('')
 const filtroTipo = ref('')
 
@@ -95,15 +95,20 @@ const uniqueTypes = computed(() => {
   return [...new Set(types)].sort()
 })
 
-const universidadesFiltradas = computed(() => {
+const universidadesFiltradasBase = computed(() => {
   return items.value
     .filter(university => {
       const matchName = !filtroNombre.value || university.name === filtroNombre.value
       const matchType = !filtroTipo.value || university.type === filtroTipo.value
       return matchName && matchType
     })
-    .slice(0, limitRender.value)
 })
+
+const {
+  visibleItems: universidadesFiltradas,
+  hasMore,
+  loadMore
+} = useDirectoryPagination(universidadesFiltradasBase, () => props.data?.limit, 8, 4)
 
 const fetchDirectorioMiembros = async () => {
   try {
@@ -128,11 +133,7 @@ const injectMockUniversidades = () => {
   }
 }
 
-watch(() => initialLimit.value, newVal => {
-  limitRender.value = newVal
-})
-
-watch(() => [initialLimit.value, forcedType.value], () => {
+watch(() => forcedType.value, () => {
   fetchDirectorioMiembros()
 }, { immediate: true })
 </script>
@@ -237,14 +238,23 @@ watch(() => [initialLimit.value, forcedType.value], () => {
           </p>
         </div>
 
-        <div class="member-directory__action">
-          <component 
-            :is="linkTag" 
-            :to="actionUrl" 
+        <div v-if="hasActionUrl || hasMore" class="member-directory__action">
+          <component
+            v-if="hasActionUrl"
+            :is="linkTag"
+            :to="actionUrl"
             class="member-directory__button d-flex align-items-center justify-content-center text-decoration-none"
           >
             {{ actionText }}
           </component>
+          <button
+            v-else
+            type="button"
+            @click="loadMore"
+            class="member-directory__button d-flex align-items-center justify-content-center"
+          >
+            {{ actionText }}
+          </button>
         </div>
       </div>
     </div>

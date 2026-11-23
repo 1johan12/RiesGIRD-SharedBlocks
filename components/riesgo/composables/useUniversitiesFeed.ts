@@ -17,7 +17,7 @@ export function useUniversitiesFeed() {
   const fetchDirectorio = async (forcedType: string) => {
     pending.value = true
     try {
-      let url = `${getPublicApiUrl()}/universities?limit=100`
+      let url = `${getPublicApiUrl()}/universities?limit=500`
       
       if (forcedType !== 'all') {
         url += `&type=${forcedType}`

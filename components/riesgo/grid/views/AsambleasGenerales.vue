@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import SectionTitle from '../../section/title/SectionTitle.vue';
 import { formatImageUrl } from '@shared/helpers/url';
 import { sanitizeHref, getPostDetailRoute } from '../../../../helpers/sanitize';
+import { resolveDirectoryLimit } from '../../composables/useDirectoryPagination';
 import { getPublicApiUrl } from '../../../../config/apiConfig';
 
 const props = defineProps<{
@@ -14,7 +15,10 @@ const router = useRouter();
 
 // --- CONFIGURACIÓN REACTIVA DESDE EL PAGE BUILDER ---
 const title = computed(() => props.data?.title || 'Asambleas Generales');
-const limit = computed(() => Math.min(Math.max(Number(props.data?.limit) || 6, 1), 100));
+const limit = computed(() => {
+  const raw = resolveDirectoryLimit(props.data?.limit, 6);
+  return raw === 0 ? 100 : Math.min(raw, 100);
+});
 const postType = computed(() => props.data?.postType || 'assemblies');
 
 // --- ESTADOS REACTIVOS DEL CONSUMIDOR ---

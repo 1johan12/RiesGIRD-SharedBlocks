@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { formatImageUrl } from '@shared/helpers/url';
-import { PUBLIC_API_URL, getPublicApiUrl } from '../../../../config/apiConfig';
-import { getPostDetailRoute } from '../../../../helpers/sanitize';
+import { formatImageUrl } from '../../../../helpers/url';
+import { getPublicApiUrl } from '../../../../config/apiConfig';
+import { getPostDetailRoute, sanitizeHref } from '../../../../helpers/sanitize';
 
-// ── 🧠 CONTRATOS DE INTERFACES ESTRICTAS DE TU API DE FASTIFY ──
 export interface FastifyPostRecord {
   id: string | number;
   title: string;
@@ -18,6 +17,7 @@ export interface FastifyPostRecord {
   slug?: string;
   autor?: string;
   is_featured?: number | boolean;
+  category?: { id: number; name: string } | null;
 }
 
 export interface GridSectionConfig {
@@ -25,172 +25,249 @@ export interface GridSectionConfig {
   title: string;
   postType: 'all' | 'news' | 'event' | 'calls' | 'assemblies';
   limit: number | string;
+  showMoreLink?: boolean;
+  moreLinkLabel?: string;
+  moreLinkUrl?: string;
 }
 
 export interface HubMegasectionConfig {
   id?: string | number;
   showSlider?: boolean;
   sliderTitle?: string;
+  badgeLabel?: string;
+  showPublishButton?: boolean;
+  publishButtonLabel?: string;
+  publishButtonUrl?: string;
   grids?: GridSectionConfig[];
 }
 
 const props = defineProps<{
-  data: HubMegasectionConfig | null
+  data: HubMegasectionConfig | null;
 }>();
 
 const showSlider = computed(() => props.data?.showSlider ?? true);
-const sliderTitle = computed(() => props.data?.sliderTitle || 'Publicaciones Destacadas');
-const dynamicGrids = computed(() => props.data?.grids || [
-  { id: 'g1', title: 'Eventos y Actividades Próximas', postType: 'event', limit: 4 },
-  { id: 'g2', title: 'Noticias y Novedades Editoriales', postType: 'news', limit: 4 }
-]);
+const sliderTitle = computed(() => String(props.data?.sliderTitle || '').trim() || 'Publicaciones Destacadas');
+const badgeLabel = computed(() => String(props.data?.badgeLabel || '').trim());
+const showPublishButton = computed(() => Boolean(props.data?.showPublishButton));
+const publishButtonLabel = computed(() => String(props.data?.publishButtonLabel || '').trim() || 'Publique su Actividad');
+const publishButtonHref = computed(() => sanitizeHref(props.data?.publishButtonUrl, ''));
+
+const defaultGrids: GridSectionConfig[] = [
+  { id: 'g1', title: 'Eventos y Actividades Próximas', postType: 'event', limit: 4, showMoreLink: false, moreLinkLabel: 'Ver más publicaciones', moreLinkUrl: '' },
+  { id: 'g2', title: 'Noticias y Novedades Editoriales', postType: 'news', limit: 4, showMoreLink: false, moreLinkLabel: 'Ver más publicaciones', moreLinkUrl: '' },
+];
+
+const dynamicGrids = computed(() =>
+  Array.isArray(props.data?.grids) && props.data.grids.length > 0 ? props.data.grids : defaultGrids
+);
 
 const items = ref<FastifyPostRecord[]>([]);
 const pending = ref(false);
 const searchQuery = ref('');
 const currentSliderIndex = ref(0);
 
-// Función base de Fetch (Utilizada por el Panel SPA Admin)
-const fetchFeedFromFastify = async () => {
-  pending.value = true;
-  try {
-    const url = `${getPublicApiUrl()}/news?limit=100`;
-    const response = await fetch(url);
-    if (response.ok) {
-      const resData = await response.json();
-      const records = resData?.data || resData || [];
-      if (records.length > 0) {
-        items.value = records;
-      } else {
-        injectMockData();
+const isInternalRoute = (href: string): boolean => href.startsWith('/');
+
+const loadFeedRecords = async (): Promise<FastifyPostRecord[]> => {
+  const apiBase = getPublicApiUrl();
+  const baseResponse = await fetch(`${apiBase}/news?limit=100`);
+  if (!baseResponse.ok) return [];
+
+  const baseJson = await baseResponse.json();
+  const records: FastifyPostRecord[] = Array.isArray(baseJson?.data)
+    ? baseJson.data
+    : Array.isArray(baseJson)
+      ? baseJson
+      : [];
+
+  // Si hay >=100 registros globales y alguna grilla pide un tipo sin presencia, consultamos ese tipo puntual
+  if (records.length >= 100) {
+    const requestedTypes = [...new Set(dynamicGrids.value.map((g) => g.postType).filter((t) => t && t !== 'all'))];
+    const missingTypes = requestedTypes.filter((t) => !records.some((r) => r.type === t));
+
+    if (missingTypes.length > 0) {
+      const extraBatches = await Promise.all(
+        missingTypes.map(async (type) => {
+          try {
+            const resp = await fetch(`${apiBase}/news?limit=24&type=${encodeURIComponent(type)}`);
+            if (!resp.ok) return [];
+            const json = await resp.json();
+            return Array.isArray(json?.data) ? json.data : Array.isArray(json) ? json : [];
+          } catch {
+            return [];
+          }
+        })
+      );
+      const seenIds = new Set(records.map((r) => String(r.id)));
+      for (const batch of extraBatches) {
+        for (const row of batch) {
+          if (!seenIds.has(String(row.id))) {
+            seenIds.add(String(row.id));
+            records.push(row);
+          }
+        }
       }
-    } else {
-      injectMockData();
     }
-  } catch (error) {
-    console.error("Error consumiendo la API directa de Fastify:", error);
-    injectMockData();
-  } finally {
-    pending.value = false;
   }
+
+  return records;
 };
 
 const injectMockData = () => {
-  const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window));
+  const isNuxtEnvironment =
+    typeof (globalThis as any).useNuxtApp === 'function' ||
+    (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window));
+
   if (!isNuxtEnvironment) {
     const hace2Horas = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
     const hace3Dias = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 
     items.value = [
-      { id: 1, title: 'Convocatoria de Proyectos de Investigación Regional 2026', excerpt: 'Bases oficiales para la presentación de planes de contingencia territorial universitaria.', modality: 'hybrid', start_date: hace2Horas, created_at: hace2Horas, type: 'calls', is_featured: 1 },
-      { id: 2, title: 'Conferencia Internacional sobre Gestión del Riesgo Climático', excerpt: 'Participación de ponentes internacionales en el auditorio de la Red.', modality: 'in_person', start_date: hace3Dias, created_at: hace3Dias, type: 'event', is_featured: 0 },
-      { id: 3, title: 'Asamblea General Extraordinaria de Delegados y Rectores', excerpt: 'Sesión ordinaria virtual para la aprobación del nuevo reglamento unificado.', modality: 'virtual', start_date: hace2Horas, created_at: hace2Horas, type: 'assemblies', is_featured: 0 },
-      { id: 4, title: 'Taller de Capacitación Especializado en Tecnologías Headless', excerpt: 'Desarrollo de habilidades en arquitecturas modernas con Fastify y Vue 3 SPA.', modality: 'virtual', start_date: hace2Horas, created_at: hace2Horas, type: 'news', is_featured: 0 }
+      { id: 1, slug: 'convocatoria-investigacion-regional-2026', title: 'Convocatoria de Proyectos de Investigación Regional 2026', excerpt: 'Bases oficiales para la presentación de planes de contingencia territorial universitaria.', modality: 'hybrid', start_date: hace2Horas, created_at: hace2Horas, type: 'calls', is_featured: 1, category: { id: 1, name: 'RiesGIRD' } },
+      { id: 2, slug: 'conferencia-internacional-riesgo-climatico', title: 'Conferencia Internacional sobre Gestión del Riesgo Climático', excerpt: 'Participación de ponentes internacionales en el auditorio de la Red.', modality: 'in_person', start_date: hace3Dias, created_at: hace3Dias, type: 'event', is_featured: 0, category: { id: 1, name: 'RiesGIRD' } },
+      { id: 3, slug: 'asamblea-general-delegados-rectores', title: 'Asamblea General Extraordinaria de Delegados y Rectores', excerpt: 'Sesión ordinaria virtual para la aprobación del nuevo reglamento unificado.', modality: 'virtual', start_date: hace2Horas, created_at: hace2Horas, type: 'assemblies', is_featured: 0, category: { id: 1, name: 'RiesGIRD' } },
+      { id: 4, slug: 'taller-capacitacion-gestion-territorial', title: 'Taller de Capacitación Especializado en Gestión Territorial', excerpt: 'Desarrollo de capacidades para nodos universitarios regionales.', modality: 'virtual', start_date: hace2Horas, created_at: hace2Horas, type: 'news', is_featured: 0, category: { id: 1, name: 'RiesGIRD' } },
     ];
   } else {
     items.value = [];
   }
 };
 
-if (typeof (globalThis as any).useAsyncData === 'function') {
-  const blockId = props.data?.id || 'static-hub';
-  const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
-    `megasection-feed-${blockId}`,
-    async () => {
-      const url = `${getPublicApiUrl()}/news?limit=100`;
-      const response = await fetch(url);
-      if (response.ok) {
-        const resData = await response.json();
-        return resData?.data || resData || [];
-      }
-      return [];
-    }
-  );
-
-  watch(ssrRecords, (newVal) => {
-    if (newVal && newVal.length > 0) {
-      items.value = newVal;
+const fetchFeedFromFastify = async () => {
+  pending.value = true;
+  try {
+    const records = await loadFeedRecords();
+    if (records.length > 0) {
+      items.value = records;
     } else {
       injectMockData();
     }
-  }, { immediate: true });
+  } catch (error) {
+    console.error('Error consumiendo la API pública de Fastify:', error);
+    injectMockData();
+  } finally {
+    pending.value = false;
+  }
+};
 
-  watch(ssrPending, (val) => { pending.value = val; }, { immediate: true });
+if (typeof (globalThis as any).useAsyncData === 'function') {
+  const { data: ssrRecords, pending: ssrPending } = (globalThis as any).useAsyncData(
+    () => `megasection-feed-${props.data?.id || 'hub'}`,
+    async () => {
+      try {
+        return await loadFeedRecords();
+      } catch {
+        return [];
+      }
+    }
+  );
+
+  watch(
+    ssrRecords,
+    (newVal) => {
+      if (Array.isArray(newVal) && newVal.length > 0) {
+        items.value = newVal;
+      } else {
+        injectMockData();
+      }
+    },
+    { immediate: true }
+  );
+
+  watch(ssrPending, (val) => {
+    pending.value = Boolean(val);
+  }, { immediate: true });
 } else {
   fetchFeedFromFastify();
 }
 
-// ── ⚙️ LOGICA DE FILTRADO Y PROCESAMIENTO (Mantenida intacta) ──
+const isRecentPastTimestamp = (dateStr: string | undefined, windowMs: number, now: number): boolean => {
+  if (!dateStr) return false;
+  const ts = new Date(dateStr).getTime();
+  return !Number.isNaN(ts) && ts <= now && now - ts <= windowMs;
+};
+
 const sliderItems = computed(() => {
-  const ahora = Date.now();
-  const unDiaEnMilisegundos = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
 
-  return items.value.filter(post => {
-    const esDestacado = post.is_featured === 1 || post.is_featured === true;
-    const timestampCreacion = new Date(post.created_at || post.start_date || '').getTime();
-    const esReciente24h = (ahora - timestampCreacion) <= unDiaEnMilisegundos;
+  const highlighted = items.value.filter(
+    (post) =>
+      post.is_featured === 1 ||
+      post.is_featured === true ||
+      isRecentPastTimestamp(post.created_at || post.start_date, oneDayMs, now)
+  );
 
-    return esDestacado || esReciente24h;
-  });
+  return (highlighted.length > 0 ? highlighted : items.value).slice(0, 5);
 });
+
+watch(sliderItems, (list) => {
+  if (list.length === 0 || currentSliderIndex.value >= list.length) {
+    currentSliderIndex.value = 0;
+  }
+});
+
+const prevSlide = () => {
+  if (sliderItems.value.length <= 1) return;
+  currentSliderIndex.value =
+    (currentSliderIndex.value - 1 + sliderItems.value.length) % sliderItems.value.length;
+};
+
+const nextSlide = () => {
+  if (sliderItems.value.length <= 1) return;
+  currentSliderIndex.value = (currentSliderIndex.value + 1) % sliderItems.value.length;
+};
 
 const getFilteredFeedForGrid = (postType: string, limitCount: number | string) => {
   const query = searchQuery.value.toLowerCase().trim();
-  let baseFeed = items.value;
+  const rawLimit = Number(limitCount);
+  const safeLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : 4;
 
-  if (postType !== 'all') {
-    if (postType === 'event') {
-      baseFeed = items.value.filter(p => p.type === 'event' || p.type === 'calls');
-    } else {
-      baseFeed = items.value.filter(p => p.type === postType);
-    }
-  }
+  let baseFeed = postType && postType !== 'all'
+    ? items.value.filter((p) => p.type === postType)
+    : items.value;
 
   if (query) {
-    baseFeed = baseFeed.filter(p => p.title.toLowerCase().includes(query) || p.excerpt?.toLowerCase().includes(query));
+    baseFeed = baseFeed.filter(
+      (p) =>
+        String(p.title || '').toLowerCase().includes(query) ||
+        String(p.excerpt || '').toLowerCase().includes(query) ||
+        String(p.category?.name || '').toLowerCase().includes(query)
+    );
   }
 
-  return baseFeed.slice(0, Number(limitCount));
+  return baseFeed.slice(0, safeLimit);
 };
 
 const latestNewsSidebar = computed(() => {
-  const ahora = Date.now();
-  const sieteDiasEnMs = 7 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
-  return items.value.filter(post => {
-    const esDestacado = post.is_featured === 1 || post.is_featured === true;
-    const timestampCreacion = new Date(post.created_at || post.start_date || '').getTime();
-    const esReciente = !Number.isNaN(timestampCreacion) && (ahora - timestampCreacion) <= sieteDiasEnMs;
+  const recentOrFeatured = items.value.filter(
+    (post) =>
+      post.is_featured === 1 ||
+      post.is_featured === true ||
+      isRecentPastTimestamp(post.created_at || post.start_date, sevenDaysMs, now)
+  );
 
-    return esDestacado || esReciente;
-  }).slice(0, 4);
+  return (recentOrFeatured.length > 0 ? recentOrFeatured : items.value).slice(0, 4);
 });
 
-const translateModality = (modality: string) => {
-  const dictionary: Record<string, string> = { in_person: 'Presencial', virtual: 'Virtual', hybrid: 'Híbrido' };
-  return dictionary[modality] || modality;
-};
-
 const translateType = (type: string) => {
-  const dictionary: Record<string, string> = { news: 'Noticia', event: 'Evento', calls: 'Convocatoria', assemblies: 'Asamblea' };
+  const dictionary: Record<string, string> = {
+    news: 'Noticia',
+    event: 'Evento',
+    calls: 'Convocatoria',
+    assemblies: 'Asamblea',
+  };
   return dictionary[type] || type;
 };
 
-const getParsedDate = (dateString: string | undefined) => {
-  if (!dateString) return { day: '24', month: 'Jun' };
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return { day: '24', month: 'Jun' };
-  const day = date.getUTCDate().toString().padStart(2, '0');
-  const month = date.toLocaleString('es-ES', { month: 'short', timeZone: 'UTC' }).replace('.', '');
-  return { day, month };
-};
+const getBadgePrimaryLabel = (post: FastifyPostRecord): string =>
+  badgeLabel.value || post.category?.name || 'RiesGIRD';
 
-const formatReadableDate = (dateString: string | undefined) => {
-  if (!dateString) return 'Junio 2026';
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return 'Junio 2026';
-  return date.toLocaleString('es-ES', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-};
+const getGridMoreHref = (grid: GridSectionConfig): string =>
+  grid.showMoreLink ? sanitizeHref(grid.moreLinkUrl, '') : '';
 
 const formatSidebarDate = (dateString: string | undefined) => {
   if (!dateString) return 'Reciente';
@@ -198,7 +275,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   if (Number.isNaN(date.getTime())) return 'Reciente';
   return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' });
 };
-
 </script>
 
 <template>
@@ -207,37 +283,72 @@ const formatSidebarDate = (dateString: string | undefined) => {
     <div class="grid-slider-master-container content-wrapper mb-12" v-if="showSlider && sliderItems.length > 0">
       <div class="slider-header-wrap">
         <h3 class="slider-block-indicator-title">
-          <svg class="lightning-bolt-svg animate-flash" viewBox="0 0 24 24" fill="currentColor">
+          <svg class="lightning-bolt-svg animate-flash" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           {{ sliderTitle }}
         </h3>
+        <div class="slider-nav-arrows" v-if="sliderItems.length > 1">
+          <button type="button" class="slider-arrow-btn" aria-label="Publicación anterior" @click="prevSlide">
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="slider-arrow-btn" aria-label="Siguiente publicación" @click="nextSlide">
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          </button>
+        </div>
       </div>
 
       <div class="relative-slider-viewport">
         <transition-group name="hub-slider-fade">
-          <div v-for="(slide, sIdx) in sliderItems" v-show="currentSliderIndex === sIdx" :key="slide.id"
-            class="slider-layout-split-track">
-            <div class="slider-media-side">
-              <img :src="formatImageUrl(slide.featured_image_path)" :alt="slide.title" class="slider-img-element">
-              <span class="hot-badge-time">Destacado / Reciente</span>
-            </div>
-            <div class="slider-textual-side">
-              <span class="badge-type-tag">{{ translateType(slide.type) }}</span>
-              <h2 class="slider-title-core-text text-truncate-2">{{ slide.title }}</h2>
-              <p class="slider-excerpt-core-paragraph text-truncate-3" v-if="slide.excerpt">{{ slide.excerpt }}</p>
-              <div class="slider-bullets-strip">
-                <button v-for="(_, dIdx) in sliderItems" :key="dIdx" @click="currentSliderIndex = dIdx"
-                  class="bullet-dot-item" :class="{ 'bullet-active-node': currentSliderIndex === dIdx }"></button>
+          <div
+            v-for="(slide, sIdx) in sliderItems"
+            v-show="currentSliderIndex === sIdx"
+            :key="slide.id"
+            class="slider-slide-item"
+          >
+            <router-link :to="getPostDetailRoute(slide)" class="slider-layout-split-track slider-card-link">
+              <div class="slider-media-side">
+                <img
+                  v-if="slide.featured_image_path"
+                  :src="formatImageUrl(slide.featured_image_path)"
+                  :alt="slide.title"
+                  loading="lazy"
+                  decoding="async"
+                  class="slider-img-element"
+                >
+                <div v-else class="media-empty-placeholder">
+                  <i class="bi bi-image" aria-hidden="true"></i>
+                </div>
+                <span class="hot-badge-time">
+                  {{ slide.is_featured === 1 || slide.is_featured === true ? 'Destacado' : 'Reciente' }}
+                </span>
               </div>
-            </div>
+              <div class="slider-textual-side">
+                <span class="badge-type-tag">{{ translateType(slide.type) }}</span>
+                <h2 class="slider-title-core-text text-truncate-2">{{ slide.title }}</h2>
+                <p class="slider-excerpt-core-paragraph text-truncate-3" v-if="slide.excerpt">{{ slide.excerpt }}</p>
+                <span class="slider-read-more">Leer publicación &rarr;</span>
+              </div>
+            </router-link>
           </div>
         </transition-group>
+      </div>
+
+      <div class="slider-bullets-strip" v-if="sliderItems.length > 1">
+        <button
+          v-for="(slide, dIdx) in sliderItems"
+          :key="`dot-${slide.id || dIdx}`"
+          type="button"
+          :aria-label="`Ir a publicación ${dIdx + 1}`"
+          @click="currentSliderIndex = dIdx"
+          class="bullet-dot-item"
+          :class="{ 'bullet-active-node': currentSliderIndex === dIdx }"
+        ></button>
       </div>
     </div>
 
     <div v-if="pending" class="py-5 text-center text-muted opacity-75">
-      <span class="small fw-bold">Sincronizando feed de Fastify...</span>
+      <span class="small fw-bold">Sincronizando publicaciones...</span>
     </div>
 
     <main v-else class="two-column-layout">
@@ -246,11 +357,16 @@ const formatSidebarDate = (dateString: string | undefined) => {
           <section class="eventos-section">
             <h2 class="section-title">{{ grid.title }}</h2>
             <div class="eventos-grid" v-if="getFilteredFeedForGrid(grid.postType, grid.limit).length > 0">
-              <router-link v-for="(post, index) in getFilteredFeedForGrid(grid.postType, grid.limit)"
+              <router-link
+                v-for="(post, index) in getFilteredFeedForGrid(grid.postType, grid.limit)"
                 :key="post.id || index"
-                :to="getPostDetailRoute(post.type, post.slug)" class="evento-card">
+                :to="getPostDetailRoute(post)"
+                class="evento-card"
+              >
                 <div class="card-top-row">
-                  <span class="badge-esan"><span>ESAN</span></span>
+                  <span class="badge-esan" :title="getBadgePrimaryLabel(post)">
+                    <span>{{ getBadgePrimaryLabel(post) }}</span>
+                  </span>
                   <span class="badge-type">
                     <span>{{ translateType(post.type) }}</span>
                   </span>
@@ -265,103 +381,169 @@ const formatSidebarDate = (dateString: string | undefined) => {
                 </div>
 
                 <div class="image-wrapper">
-                  <img :src="formatImageUrl(post.featured_image_path)" :alt="post.title" class="evento-img" />
+                  <img
+                    v-if="post.featured_image_path"
+                    :src="formatImageUrl(post.featured_image_path)"
+                    :alt="post.title"
+                    loading="lazy"
+                    decoding="async"
+                    class="evento-img"
+                  />
+                  <div v-else class="media-empty-placeholder">
+                    <i class="bi bi-image" aria-hidden="true"></i>
+                  </div>
                 </div>
               </router-link>
             </div>
             <div v-else class="text-center text-muted small py-4 bg-light rounded border border-dashed">
-              No se encontraron registros activos para este canal.
+              {{ searchQuery.trim()
+                ? `No se encontraron resultados para "${searchQuery.trim()}".`
+                : 'No se encontraron registros activos para este canal.' }}
             </div>
-            <div class="section-footer">
-              <router-link :to="grid.postType === 'event' ? '/events' : grid.postType === 'assemblies' ? '/assemblies' : '/news'" class="btn-grid-more">
-                Ver más publicaciones
+
+            <div class="section-footer" v-if="getGridMoreHref(grid)">
+              <router-link
+                v-if="isInternalRoute(getGridMoreHref(grid))"
+                :to="getGridMoreHref(grid)"
+                class="btn-grid-more"
+              >
+                {{ grid.moreLinkLabel || 'Ver más publicaciones' }}
               </router-link>
+              <a
+                v-else
+                :href="getGridMoreHref(grid)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn-grid-more"
+              >
+                {{ grid.moreLinkLabel || 'Ver más publicaciones' }}
+              </a>
             </div>
           </section>
         </div>
       </div>
 
       <aside class="right-column">
-      <div class="sidebar-stack">
+        <div class="sidebar-stack">
 
-        <!-- 1. Últimas Novedades -->
-        <section class="sidebar-box">
-          <div class="sidebar-box__surface">
-            <div class="sidebar-top-button">
-              <span>Últimas Novedades</span>
-            </div>
+          <!-- 1. Últimas Novedades -->
+          <section class="sidebar-box">
+            <div class="sidebar-box__surface">
+              <div class="sidebar-top-button">
+                <span>Últimas Novedades</span>
+              </div>
 
-            <div class="sidebar-mini-cards-stack sidebar-mini-cards-stack--news" v-if="latestNewsSidebar.length > 0">
-              <router-link
-                v-for="link in latestNewsSidebar"
-                :key="link.id"
-                :to="getPostDetailRoute(link.type, link.slug || link.id)"
-                class="sidebar-mini-card sidebar-mini-card--news"
-              >
-                <div class="mini-card-details mini-card-details--news">
-                  <div class="card-top-row card-top-row--compact">
-                    <span class="badge-esan badge-esan--sm"><span>ESAN</span></span>
-                    <span class="badge-type2 badge-type--sm">
-                      <span>{{ translateType(link.type) }}</span>
-                    </span>
+              <div class="sidebar-mini-cards-stack sidebar-mini-cards-stack--news" v-if="latestNewsSidebar.length > 0">
+                <router-link
+                  v-for="link in latestNewsSidebar"
+                  :key="link.id"
+                  :to="getPostDetailRoute(link)"
+                  class="sidebar-mini-card sidebar-mini-card--news"
+                >
+                  <div class="mini-card-details mini-card-details--news">
+                    <div class="card-top-row card-top-row--compact">
+                      <span class="badge-esan badge-esan--sm" :title="getBadgePrimaryLabel(link)">
+                        <span>{{ getBadgePrimaryLabel(link) }}</span>
+                      </span>
+                      <span class="badge-type2 badge-type--sm">
+                        <span>{{ translateType(link.type) }}</span>
+                      </span>
+                    </div>
+
+                    <h4 class="mini-card-title mini-card-title--news text-truncate-2" :title="link.title">
+                      {{ link.title }}
+                    </h4>
+
+                    <p class="mini-card-time">{{ formatSidebarDate(link.start_date || link.created_at) }}</p>
                   </div>
 
-                  <h4 class="mini-card-title mini-card-title--news text-truncate-2" :title="link.title">
-                    {{ link.title }}
-                  </h4>
+                  <div class="mini-card-thumb mini-card-thumb--sm">
+                    <img
+                      v-if="link.featured_image_path"
+                      :src="formatImageUrl(link.featured_image_path)"
+                      :alt="link.title"
+                      loading="lazy"
+                      decoding="async"
+                      class="mini-thumb-img"
+                    >
+                    <div v-else class="media-empty-placeholder media-empty-placeholder--sm">
+                      <i class="bi bi-image" aria-hidden="true"></i>
+                    </div>
+                  </div>
+                </router-link>
+              </div>
 
-                  <p class="mini-card-time">{{ formatSidebarDate(link.start_date || link.created_at) }}</p>
-                </div>
-
-                <div class="mini-card-thumb mini-card-thumb--sm">
-                  <img :src="formatImageUrl(link.featured_image_path)" :alt="link.title" class="mini-thumb-img">
-                </div>
-              </router-link>
-            </div>
-
-            <div v-else class="sidebar-empty-state">
-              No hay novedades para mostrar.
-            </div>
-          </div>
-        </section>
-
-        <!-- 2. Buscar las últimas novedades -->
-        <section class="sidebar-box">
-          <div class="sidebar-box__surface">
-            <div class="sidebar-top-button">
-              <span>Busque las últimas novedades</span>
-            </div>
-
-            <div class="sidebar-search-wrap">
-              <div class="sidebar-native-search-box sidebar-native-search-box--custom">
-                <input
-                  type="text"
-                  v-model="searchQuery"
-                  placeholder="Buscar..."
-                  class="search-input-field search-input-field--custom"
-                >
+              <div v-else class="sidebar-empty-state">
+                No hay novedades para mostrar.
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- 3. Publique su Actividad -->
-        <section class="sidebar-box">
-          <div class="sidebar-box__surface sidebar-box__surface--publish">
-            <div class="sidebar-publish-shell">
-              <button type="button" class="sidebar-publish-button">
-                Publique su Actividad
-              </button>
+          <!-- 2. Buscador en tiempo real -->
+          <section class="sidebar-box">
+            <div class="sidebar-box__surface">
+              <div class="sidebar-top-button">
+                <span>Busque las últimas novedades</span>
+              </div>
+
+              <div class="sidebar-search-wrap">
+                <div class="sidebar-native-search-box sidebar-native-search-box--custom">
+                  <input
+                    type="text"
+                    v-model="searchQuery"
+                    placeholder="Buscar..."
+                    aria-label="Buscar publicaciones"
+                    class="search-input-field search-input-field--custom"
+                  >
+                  <button
+                    v-if="searchQuery"
+                    type="button"
+                    class="search-clear-btn"
+                    aria-label="Limpiar búsqueda"
+                    @click="searchQuery = ''"
+                  >
+                    &times;
+                  </button>
+                  <svg v-else class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                  </svg>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-      </div>
-    </aside>
+          <!-- 3. Botón CTA opcional ("Publique su Actividad") -->
+          <section class="sidebar-box" v-if="showPublishButton && publishButtonHref">
+            <div class="sidebar-box__surface sidebar-box__surface--publish">
+              <div class="sidebar-publish-shell">
+                <router-link
+                  v-if="isInternalRoute(publishButtonHref)"
+                  :to="publishButtonHref"
+                  class="sidebar-publish-button"
+                >
+                  <span>{{ publishButtonLabel }}</span>
+                </router-link>
+                <a
+                  v-else
+                  :href="publishButtonHref"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="sidebar-publish-button"
+                >
+                  <span>{{ publishButtonLabel }}</span>
+                </a>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </aside>
 
     </main>
   </div>
 </template>
+
 <style scoped>
 .megasection-hub-container {
   width: 100%;
@@ -388,7 +570,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   align-items: center;
 }
 
-/* 📌 Columna Derecha Actualizada */
 .right-column {
   width: 370px;
   max-width: 370px;
@@ -415,9 +596,23 @@ const formatSidebarDate = (dateString: string | undefined) => {
   box-sizing: border-box;
 }
 
+.media-empty-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #94a3b8;
+  font-size: 28px;
+}
+
+.media-empty-placeholder--sm {
+  font-size: 20px;
+}
 
 /* ==========================================================================
-   2. 🎯 MOTOR HORIZONTAL MINI-CARDS (SIDEBAR STACK)
+   MINI-CARDS SIDEBAR
    ========================================================================== */
 .sidebar-mini-cards-stack {
   display: flex;
@@ -441,22 +636,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
   padding-bottom: 0;
 }
 
-.sidebar-mini-card:first-child {
-  padding-top: 4px;
-}
-
 .sidebar-mini-card:hover .mini-card-title {
   color: #db143c;
-}
-
-.mini-card-thumb {
-  width: 72px;
-  height: 72px;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #f8fafc;
-  flex-shrink: 0;
-  border: 1px solid #f1f5f9;
 }
 
 .mini-thumb-img {
@@ -475,30 +656,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   overflow: hidden;
 }
 
-.mini-card-type-label {
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* Colores de etiquetas semánticas */
-.mini-card-type-label.news {
-  color: #db143c;
-}
-
-.mini-card-type-label.event {
-  color: #25529a;
-}
-
-.mini-card-type-label.calls {
-  color: #eab308;
-}
-
-.mini-card-type-label.assemblies {
-  color: #653E9B;
-}
-
 .mini-card-title {
   font-size: 0.82rem;
   font-weight: 700;
@@ -507,9 +664,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
   margin: 0;
 }
 
-
 /* ==========================================================================
-   3. GRID SLIDER INTERNO MAESTRO
+   GRID SLIDER INTERNO MAESTRO
    ========================================================================== */
 .grid-slider-master-container {
   background: #ffffff;
@@ -520,6 +676,10 @@ const formatSidebarDate = (dateString: string | undefined) => {
   margin-bottom: 20px;
   border-bottom: 1px dashed #cbd5e1;
   padding-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   text-align: left;
 }
 
@@ -535,10 +695,38 @@ const formatSidebarDate = (dateString: string | undefined) => {
   letter-spacing: 0.2px;
 }
 
+.slider-nav-arrows {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.slider-arrow-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #1e293b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.slider-arrow-btn:hover {
+  background: #274e9d;
+  border-color: #274e9d;
+  color: #ffffff;
+}
+
 .lightning-bolt-svg {
   width: 18px;
   height: 18px;
   color: #db143c;
+  flex-shrink: 0;
 }
 
 .relative-slider-viewport {
@@ -546,6 +734,19 @@ const formatSidebarDate = (dateString: string | undefined) => {
   width: 100%;
   min-height: 180px;
   overflow: hidden;
+}
+
+.slider-slide-item {
+  width: 100%;
+}
+
+.slider-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.slider-card-link:hover .slider-title-core-text {
+  color: #274e9d;
 }
 
 .slider-layout-split-track {
@@ -610,6 +811,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
   color: #1e293b;
   margin: 0;
   line-height: 1.3;
+  transition: color 0.2s ease;
 }
 
 .slider-excerpt-core-paragraph {
@@ -619,10 +821,16 @@ const formatSidebarDate = (dateString: string | undefined) => {
   margin: 0;
 }
 
+.slider-read-more {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #274e9d;
+}
+
 .slider-bullets-strip {
   display: flex;
   gap: 6px;
-  margin-top: 4px;
+  margin-top: 14px;
 }
 
 .bullet-dot-item {
@@ -641,21 +849,13 @@ const formatSidebarDate = (dateString: string | undefined) => {
   border-radius: 4px;
 }
 
-
 /* ==========================================================================
-   4. SECCIÓN NUEVA DE EVENTOS (SCROLL HORIZONTAL Y TARJETAS ACTUALIZADAS)
+   SECCIÓN EVENTOS (SCROLL HORIZONTAL Y TARJETAS)
    ========================================================================== */
 .eventos-section {
   width: 100%;
   text-align: left;
   box-sizing: border-box;
-}
-
-.title-link {
-  text-decoration: none;
-  display: inline-block;
-  width: 100%;
-  text-align: left;
 }
 
 .section-title {
@@ -699,7 +899,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   scrollbar-gutter: stable;
 }
 
-/* Custom Scrollbar */
 .eventos-grid::-webkit-scrollbar {
   height: 10px;
 }
@@ -754,40 +953,44 @@ const formatSidebarDate = (dateString: string | undefined) => {
   min-height: 22px;
 }
 
-/* Elementos de Insignias / Badges */
 .badge-esan,
 .badge-type {
-  width: 91px;
+  min-width: 91px;
+  max-width: 120px;
   height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
   font-family: var(--font-bricolage);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1;
-  flex: 0 0 91px;
   white-space: nowrap;
 }
 
 .badge-esan {
   background: #e1113f;
   color: #ffffff;
+  padding: 0 12px 0 8px;
+  overflow: hidden;
   clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 0 100%);
+}
+
+.badge-esan > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
 }
 
 .badge-type {
   position: relative;
   width: 91px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
+  flex: 0 0 91px;
 }
 
-/* CAPA BASE (Atrás) */
 .badge-type::before {
   content: "";
   position: absolute;
@@ -798,7 +1001,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   z-index: 1;
 }
 
-/* CAPA RELLENO (Adelante) */
 .badge-type::after {
   content: "";
   position: absolute;
@@ -809,12 +1011,11 @@ const formatSidebarDate = (dateString: string | undefined) => {
   z-index: 2;
 }
 
-/* TEXTO CON DEGRADADO */
-.badge-type>span {
+.badge-type > span {
   position: relative;
   z-index: 3;
   font-family: var(--font-bricolage);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1;
   background: linear-gradient(90deg, #e1113f 0%, #274e9d 100%);
@@ -823,9 +1024,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
   color: transparent;
 }
 
-
-/* inicio de rectuangulo derecho */
 .badge-type2 {
+  position: relative;
   width: 91px;
   height: 22px;
   display: inline-flex;
@@ -838,15 +1038,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   line-height: 1;
   flex: 0 0 91px;
   white-space: nowrap;
-}
-.badge-type2 {
-  position: relative;
-  width: 91px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
 }
 
 .badge-type2::before {
@@ -869,7 +1060,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
   z-index: 2;
 }
 
-.badge-type2>span {
+.badge-type2 > span {
   position: relative;
   z-index: 3;
   font-family: var(--font-bricolage);
@@ -881,9 +1072,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
   background-clip: text;
   color: transparent;
 }
-/* fin de rectangulo derecho */
 
-/* Elementos de Información Interna */
 .info-title {
   margin: 0;
   font-family: var(--font-bricolage);
@@ -912,7 +1101,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
 
 .image-wrapper {
   width: 100%;
-  min-width: 224px;
+  min-width: 0;
   height: 154px;
   overflow: hidden;
   border-radius: 4px;
@@ -959,10 +1148,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   opacity: 0.98;
 }
 
-
-/* ==========================================================================
-   5. COMPONENTES EXTRA PRESERVADOS (WIDGETS, UTILITIES Y ANIMACIONES)
-   ========================================================================== */
 .text-truncate-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -979,25 +1164,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
 
 .mb-12 {
   margin-bottom: 32px;
-}
-
-.mt-4 {
-  margin-top: 16px;
-}
-
-.text-decoration-none {
-  text-decoration: none;
-}
-
-/* Sidebar Componentes Nativos */
-.sidebar-widget-title {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #0f172a;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin: 0 0 16px 0;
-  text-align: left;
 }
 
 .sidebar-native-search-box {
@@ -1024,37 +1190,24 @@ const formatSidebarDate = (dateString: string | undefined) => {
   height: 16px;
   color: #25529a;
   flex-shrink: 0;
-  margin-left: auto;
+  margin-left: 8px;
 }
 
-.bg-cta-gradient {
-  background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
-  border-color: #e2e8f0;
-  padding: 32px;
+.search-clear-btn {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  margin-left: 4px;
 }
 
-.cta-cloud-icon {
-  width: 38px;
-  height: 38px;
-  color: #25529a;
-  display: block;
-  margin: 0 auto;
+.search-clear-btn:hover {
+  color: #e1113f;
 }
 
-.fw-bold-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: #000000;
-  margin: 6px 0 2px 0;
-}
-
-.x-small-desc {
-  font-size: 0.78rem;
-  line-height: 1.4;
-  margin: 0;
-}
-
-/* Transiciones & Animaciones */
 .hub-slider-fade-enter-active,
 .hub-slider-fade-leave-active {
   transition: opacity 0.4s ease-in-out;
@@ -1076,9 +1229,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
   animation: flashIcon 2s infinite;
 }
 
-
 /* ==========================================================================
-   6. 🚀 NUEVOS COMPONENTES DEL SIDEBAR AÑADIDOS
+   SIDEBAR
    ========================================================================== */
 .sidebar-stack {
   display: flex;
@@ -1108,7 +1260,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
 }
 
 .sidebar-top-button {
-  width: 280px;
+  width: 100%;
+  max-width: 280px;
   height: 48px;
   margin: 0 auto;
   border-radius: 8px;
@@ -1117,6 +1270,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  padding: 0 12px;
 }
 
 .sidebar-top-button span {
@@ -1127,7 +1281,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-thickness: 1px;
-  line-height: 1;
+  line-height: 1.1;
   text-align: center;
 }
 
@@ -1139,7 +1293,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
 }
 
 .sidebar-mini-card--news {
-  width: 293px;
+  width: 100%;
+  max-width: 293px;
   min-height: 107px;
   margin: 0 auto;
   background: #ffffff;
@@ -1152,7 +1307,6 @@ const formatSidebarDate = (dateString: string | undefined) => {
   gap: 12px;
   text-decoration: none;
   color: inherit;
-  box-shadow: none;
   border: none;
   overflow: hidden;
 }
@@ -1177,9 +1331,9 @@ const formatSidebarDate = (dateString: string | undefined) => {
 
 .badge-esan--sm,
 .badge-type--sm {
-  width: 59px;
+  min-width: 59px;
+  max-width: 82px;
   height: 14px;
-  flex: 0 0 59px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1194,10 +1348,13 @@ const formatSidebarDate = (dateString: string | undefined) => {
 .badge-esan--sm {
   background: #e1113f;
   color: #ffffff;
+  padding: 0 9px 0 5px;
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
 }
 
 .badge-type--sm {
+  width: 59px;
+  flex: 0 0 59px;
   position: relative;
   background: #ffffff;
 }
@@ -1264,7 +1421,8 @@ const formatSidebarDate = (dateString: string | undefined) => {
 
 .sidebar-empty-state {
   margin-top: 15px;
-  width: 293px;
+  width: 100%;
+  max-width: 293px;
   margin-left: auto;
   margin-right: auto;
   min-height: 107px;
@@ -1288,19 +1446,20 @@ const formatSidebarDate = (dateString: string | undefined) => {
 }
 
 .sidebar-native-search-box--custom {
-  width: 293px;
+  width: 100%;
+  max-width: 293px;
   height: 48px;
   background: #ffffff;
   border: none;
   border-radius: 8px;
-  padding: 12px 12px;
+  padding: 6px 12px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
 }
 
 .search-input-field--custom {
-  width: 269px;
+  width: 100%;
   height: 36px;
   border: none;
   outline: none;
@@ -1309,19 +1468,19 @@ const formatSidebarDate = (dateString: string | undefined) => {
   padding: 0 14px;
   box-sizing: border-box;
   font-family: var(--font-bricolage);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 400;
   color: #000000;
-  text-align: center;
+  text-align: left;
 }
 
 .search-input-field--custom::placeholder {
-  color: #bcbcbc;
-  text-align: center;
+  color: #94a3b8;
 }
 
 .sidebar-publish-shell {
-  width: 293px;
+  width: 100%;
+  max-width: 293px;
   margin: 0 auto;
   background: #ffffff;
   border-radius: 8px;
@@ -1333,9 +1492,9 @@ const formatSidebarDate = (dateString: string | undefined) => {
 }
 
 .sidebar-publish-button {
-  width: 269px;
+  width: 100%;
+  max-width: 269px;
   height: 42px;
-  background: #ffffff;
   border: 1px solid transparent;
   border-radius: 8px;
   background:
@@ -1343,38 +1502,31 @@ const formatSidebarDate = (dateString: string | undefined) => {
     linear-gradient(90deg, #e1113f 0%, #274e9d 100%) border-box;
   font-family: var(--font-bricolage);
   font-size: 16px;
-  font-weight: 400;
-  color: transparent;
-  -webkit-background-clip: padding-box, border-box;
-  background-clip: padding-box, border-box;
-  background-image: linear-gradient(#ffffff, #ffffff), linear-gradient(90deg, #e1113f 0%, #274e9d 100%);
-  background-origin: border-box;
+  font-weight: 600;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  cursor: default;
-  position: relative;
+  cursor: pointer;
+  padding: 0 12px;
+  box-sizing: border-box;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-.sidebar-publish-button::before {
-  content: "Publique su Actividad";
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-bricolage);
-  font-size: 16px;
-  font-weight: 400;
+.sidebar-publish-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(39, 78, 157, 0.14);
+}
+
+.sidebar-publish-button > span {
   background: linear-gradient(90deg, #e1113f 0%, #274e9d 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-
 /* ==========================================================================
-   7. 📱 RESPONSIVO NATIVO INTEGRADO (MEDIA QUERIES)
+   RESPONSIVO
    ========================================================================== */
 @media (max-width: 1024px) {
   .two-column-layout {
@@ -1387,19 +1539,13 @@ const formatSidebarDate = (dateString: string | undefined) => {
     position: static;
   }
 
-  .sidebar-box {
-    width: 100%;
-  }
-
+  .sidebar-box,
   .sidebar-box__surface,
   .sidebar-native-search-box--custom,
   .sidebar-publish-shell,
-  .sidebar-empty-state {
-    width: 100%;
-  }
-
+  .sidebar-empty-state,
   .sidebar-mini-card--news {
-    width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -1415,6 +1561,19 @@ const formatSidebarDate = (dateString: string | undefined) => {
 }
 
 @media (max-width: 480px) {
+  .content-wrapper {
+    padding: 20px 16px;
+  }
+
+  .content-wrapper.eventos-panel {
+    padding: 20px 16px;
+  }
+
+  .evento-card {
+    flex: 0 0 min(268px, 100%);
+    width: min(268px, 100%);
+  }
+
   .sidebar-box {
     padding: 10px;
   }
@@ -1424,19 +1583,7 @@ const formatSidebarDate = (dateString: string | undefined) => {
   }
 
   .sidebar-top-button {
-    width: 100%;
-  }
-
-  .sidebar-native-search-box--custom {
-    padding: 0 10px;
-  }
-
-  .search-input-field--custom {
-    width: 100%;
-  }
-
-  .sidebar-publish-shell {
-    width: 100%;
+    max-width: 100%;
   }
 }
 </style>

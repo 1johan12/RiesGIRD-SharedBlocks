@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 // Capa unificada de rutas planas importada desde tu archivo central
 import { getPublicApiUrl } from '../../../../config/apiConfig'
+import { useDirectoryPagination } from '../../composables/useDirectoryPagination'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -47,16 +48,15 @@ const peru_departments = [
 ]
 
 const title = computed(() => props.data?.title || 'Plana de Especialistas')
-const initialLimit = computed(() => Number(props.data?.limit) || 6)
 
 const actionText = computed(() => props.data?.actionText || 'Ver Más')
-const actionUrl = computed(() => props.data?.actionUrl || '#')
+const actionUrl = computed(() => String(props.data?.actionUrl || '').trim())
+const hasActionUrl = computed(() => Boolean(actionUrl.value && actionUrl.value !== '#'))
 
 const linkTag = computed(() => props.linkComponent || 'router-link')
 
 const items = ref<SpecialistMember[]>([])
 const pending = ref(false)
-const limitRender = ref(initialLimit.value)
 
 // 🔥 VARIABLES REACTIVAS DE FILTRADO LOCAL (FRONT-END)
 const filtroUniversidad = ref('')
@@ -78,9 +78,8 @@ const cleanImageUrl = (url: string | null | undefined): string => {
 const fetchDirectorioEspecialistas = async () => {
   pending.value = true
   try {
-    const url = `${getPublicApiUrl()}/teams?person_type=specialist&limit=50`
+    const url = `${getPublicApiUrl()}/teams?person_type=specialist&limit=500`
     const response = await fetch(url)
-    console.log('🔥 Fetching especialistas from Fastify:', url, response.status, response.ok)
 
     if (response.ok) {
       const resData = await response.json()
@@ -109,7 +108,7 @@ const uniquePositions = computed(() => {
 // =============================================================================
 // 🔥 MOTOR COMPUTADO INTECO: Filtra de manera cruzada 100% en caliente (UI)
 // =============================================================================
-const especialistasVisibles = computed(() => {
+const especialistasFiltradosBase = computed(() => {
   if (!items.value) return []
 
   return items.value
@@ -119,12 +118,13 @@ const especialistasVisibles = computed(() => {
       const matchCargo = !filtroCargo.value || p.position_name === filtroCargo.value
       return matchUni && matchRegion && matchCargo
     })
-    .slice(0, limitRender.value)
 })
 
-const verMas = () => {
-  limitRender.value += 4
-}
+const {
+  visibleItems: especialistasVisibles,
+  hasMore,
+  loadMore
+} = useDirectoryPagination(especialistasFiltradosBase, () => props.data?.limit, 6, 4)
 
 const injectMockEspecialistas = () => {
   const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
@@ -170,13 +170,7 @@ const injectMockEspecialistas = () => {
   }
 }
 
-watch(() => initialLimit.value, (newVal) => {
-  limitRender.value = newVal
-})
-
-watch(() => initialLimit.value, () => {
-  fetchDirectorioEspecialistas()
-}, { immediate: true })
+fetchDirectorioEspecialistas()
 </script>
 
 <template>
@@ -291,15 +285,23 @@ watch(() => initialLimit.value, () => {
         <p>No se encontraron especialistas registrados bajo los filtros seleccionados.</p>
       </div>
 
-      <div class="member-directory__action" v-if="items.length > limitRender">
-        <component 
-          :is="linkTag" 
-          :to="actionUrl" 
+      <div v-if="hasActionUrl || hasMore" class="member-directory__action">
+        <component
+          v-if="hasActionUrl"
+          :is="linkTag"
+          :to="actionUrl"
           class="member-directory__button d-flex align-items-center justify-content-center text-decoration-none"
-          @click.prevent="verMas"
         >
           {{ actionText }}
         </component>
+        <button
+          v-else
+          type="button"
+          @click="loadMore"
+          class="member-directory__button d-flex align-items-center justify-content-center"
+        >
+          {{ actionText }}
+        </button>
       </div>
     </div>
   </section>

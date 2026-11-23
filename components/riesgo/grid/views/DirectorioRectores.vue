@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import { getPublicApiUrl } from '../../../../config/apiConfig'
+import { resolveDirectoryLimit } from '../../composables/useDirectoryPagination'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -35,7 +36,10 @@ const introText = computed(
     props.data?.introText ||
     'Sección destinada al registro y archivo oficial de las actividades, acuerdos y reuniones sostenidas por los directivos en el marco de la red.'
 )
-const limit = computed(() => Number(props.data?.limit) || 4)
+const limit = computed(() => {
+  const raw = resolveDirectoryLimit(props.data?.limit, 4)
+  return raw === 0 ? 500 : Math.min(raw, 500)
+})
 
 const items = ref<RectorMember[]>([])
 const pending = ref(false)

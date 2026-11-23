@@ -938,7 +938,33 @@ export const BLOCK_REGISTRY: Record<string, any> = {
         component: defineAsyncComponent(() => import('../components/riesgo/grid/views/NoticiasEventosHub.vue')),
         // editor: defineAsyncComponent(() => import('../components/riesgo/grid/updates/NoticiasEventosHubEditor.vue')),
         initialData: {
-            bannerText: 'Entérate de las últimas novedades, participa en nuestros próximos encuentros y únete a las iniciativas que impulsan el desarrollo territorial sostenible.'
+            id: 'hub_main',
+            showSlider: true,
+            sliderTitle: 'Publicaciones Destacadas',
+            showPublishButton: false,
+            publishButtonLabel: 'Publique su Actividad',
+            publishButtonUrl: '/contacto',
+            badgeLabel: '',
+            grids: [
+                {
+                    id: 'g1',
+                    title: 'Eventos y Actividades Próximas',
+                    postType: 'event',
+                    limit: 4,
+                    showMoreLink: false,
+                    moreLinkLabel: 'Ver más publicaciones',
+                    moreLinkUrl: ''
+                },
+                {
+                    id: 'g2',
+                    title: 'Noticias y Novedades Editoriales',
+                    postType: 'news',
+                    limit: 4,
+                    showMoreLink: false,
+                    moreLinkLabel: 'Ver más publicaciones',
+                    moreLinkUrl: ''
+                }
+            ]
         }
     },
     BannerInformativo: {

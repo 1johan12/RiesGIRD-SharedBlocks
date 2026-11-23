@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 import { formatImageUrl } from '@shared/helpers/url';
+import { resolveDirectoryLimit } from '../../composables/useDirectoryPagination';
 import { getPublicApiUrl } from '../../../../config/apiConfig';
 
 
@@ -26,7 +27,10 @@ const props = defineProps<{
 }>()
 
 const title = computed(() => props.data?.title || 'Busca su Aliado')
-const limit = computed(() => Number(props.data?.limit) || 12)
+const limit = computed(() => {
+  const raw = resolveDirectoryLimit(props.data?.limit, 12)
+  return raw === 0 ? 500 : Math.min(raw, 500)
+})
 
 const items = ref<AliadoEntity[]>([])
 const pending = ref(false)

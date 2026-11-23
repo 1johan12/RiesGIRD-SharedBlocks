@@ -4,6 +4,7 @@ import ModalTeamUniversity from '../modal/ModalTeamUniversity.vue'
 import SectionTitle from '../../section/title/SectionTitle.vue'
 // Capa unificada de rutas planas importada desde tu archivo central
 import { getPublicApiUrl } from '../../../../config/apiConfig'
+import { useDirectoryPagination } from '../../composables/useDirectoryPagination'
 import { formatImageUrl } from '@shared/helpers/url';
 
 interface BlockData {
@@ -39,16 +40,15 @@ const props = defineProps<{
 }>()
 
 const title = computed(() => props.data?.title || 'Directorio')
-const initialLimit = computed(() => Number(props.data?.limit) || 6)
 
 const actionText = computed(() => props.data?.actionText || 'Ver Más')
-const actionUrl = computed(() => props.data?.actionUrl || '#')
+const actionUrl = computed(() => String(props.data?.actionUrl || '').trim())
+const hasActionUrl = computed(() => Boolean(actionUrl.value && actionUrl.value !== '#'))
 
 const linkTag = computed(() => props.linkComponent || 'router-link')
 
 const items = ref<AuthorityMember[]>([])
 const pending = ref(false)
-const limitRender = ref(initialLimit.value)
 
 const filtroUniversidad = ref('')
 const filtroCargo = ref('')
@@ -62,7 +62,7 @@ const selectedRector = ref<AuthorityMember | null>(null)
 const fetchDirectorioAutoridades = async () => {
   pending.value = true
   try {
-    const url = `${getPublicApiUrl()}/teams?hierarchy_level=1&person_type=board_member&limit=100`
+    const url = `${getPublicApiUrl()}/teams?hierarchy_level=1&person_type=board_member&limit=500`
     const response = await fetch(url)
 
     if (response.ok) {
@@ -115,19 +115,20 @@ const uniquePositions = computed(() => {
   return [...new Set(positions)].sort()
 })
 
-const autoridadesVisibles = computed(() => {
+const autoridadesFiltradasBase = computed(() => {
   return items.value
     .filter(p => {
       const matchUni = !filtroUniversidad.value || p.university_name === filtroUniversidad.value
       const matchCargo = !filtroCargo.value || p.position_name === filtroCargo.value
       return matchUni && matchCargo
     })
-    .slice(0, limitRender.value)
 })
 
-const verMas = () => {
-  limitRender.value += 4
-}
+const {
+  visibleItems: autoridadesVisibles,
+  hasMore,
+  loadMore
+} = useDirectoryPagination(autoridadesFiltradasBase, () => props.data?.limit, 6, 4)
 
 const injectMockDirectorio = () => {
   const isNuxtEnvironment = typeof (globalThis as any).useNuxtApp === 'function' || (typeof window !== 'undefined' && ('__NUXT__' in window || 'NUXT' in window))
@@ -173,13 +174,7 @@ const injectMockDirectorio = () => {
   }
 }
 
-watch(() => initialLimit.value, (newVal) => {
-  limitRender.value = newVal
-})
-
-watch(() => initialLimit.value, () => {
-  fetchDirectorioAutoridades()
-}, { immediate: true })
+fetchDirectorioAutoridades()
 </script>
 
 <template>
@@ -292,14 +287,23 @@ watch(() => initialLimit.value, () => {
         <p>No se encontraron autoridades registradas bajo este filtro</p>
       </div>
 
-      <div class="member-directory__action">
-        <component 
-          :is="linkTag" 
-          :to="actionUrl" 
+      <div v-if="hasActionUrl || hasMore" class="member-directory__action">
+        <component
+          v-if="hasActionUrl"
+          :is="linkTag"
+          :to="actionUrl"
           class="member-directory__button d-flex align-items-center justify-content-center text-decoration-none"
         >
           {{ actionText }}
         </component>
+        <button
+          v-else
+          type="button"
+          @click="loadMore"
+          class="member-directory__button d-flex align-items-center justify-content-center"
+        >
+          {{ actionText }}
+        </button>
       </div>
     </div>
 

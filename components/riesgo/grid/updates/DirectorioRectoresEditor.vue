@@ -7,7 +7,7 @@ const emit = defineEmits(['update:modelValue']);
 const localData = ref({
   title: props.modelValue?.title || 'Directorio',
   introText: props.modelValue?.introText || 'Sección destinada al registro y archivo oficial de las autoridades.',
-  limit: props.modelValue?.limit || 4
+  limit: props.modelValue?.limit !== undefined && props.modelValue?.limit !== '' ? Number(props.modelValue.limit) : 4
 });
 
 // Sincronizador estricto por strings para romper bucles
@@ -55,10 +55,14 @@ watch(localData, (newVal) => {
         <div class="mb-2">
           <label class="small text-muted mb-1 fw-bold">Cantidad de Rectores a Pintar</label>
           <select v-model.number="localData.limit" class="form-select form-select-sm fw-medium">
+            <option :value="0">Sin límite (Mostrar todos)</option>
             <option :value="2">2 Autoridades (1 Fila)</option>
             <option :value="4">4 Autoridades (2 Filas)</option>
             <option :value="6">6 Autoridades (3 Filas)</option>
             <option :value="8">8 Autoridades (4 Filas)</option>
+            <option :value="12">12 Autoridades</option>
+            <option :value="16">16 Autoridades</option>
+            <option :value="24">24 Autoridades</option>
           </select>
           <span class="x-small text-muted d-block mt-2">
             💡 <strong>Nota Técnica:</strong> Este bloque extrae automáticamente los registros de la tabla <code>university_teams</code> que tengan un nivel jerárquico alto (Nivel 1 / Rectores).

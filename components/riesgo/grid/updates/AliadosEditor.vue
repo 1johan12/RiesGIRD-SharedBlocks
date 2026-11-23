@@ -6,17 +6,18 @@ const emit = defineEmits(['update:modelValue']);
 
 const localData = ref({
   title: props.modelValue?.title || 'Busca su Aliado',
-  limit: props.modelValue?.limit || 12
+  limit: props.modelValue?.limit !== undefined && props.modelValue?.limit !== '' ? Number(props.modelValue.limit) : 12
 });
 
 // Sincronizador defensivo contra bucles infinitos en el panel lateral de administración
 watch(() => props.modelValue, (newVal) => {
   if (!newVal) return;
-  if (JSON.stringify(newVal) !== JSON.stringify(localData.value)) {
-    localData.value = {
-      title: newVal.title || 'Busca su Aliado',
-      limit: newVal.limit || 12
-    };
+  const incoming = {
+    title: newVal.title || 'Busca su Aliado',
+    limit: newVal.limit !== undefined && newVal.limit !== '' ? Number(newVal.limit) : 12
+  };
+  if (JSON.stringify(incoming) !== JSON.stringify(localData.value)) {
+    localData.value = incoming;
   }
 }, { deep: true });
 
@@ -43,12 +44,14 @@ watch(localData, (newVal) => {
         <h6 class="fw-bold mb-3 text-primary"><i class="las la-server"></i> Control de la API</h6>
         <div class="mb-1">
           <label class="small text-muted mb-1 fw-bold">Máximo de Aliados a Mostrar</label>
-          <select v-model="localData.limit" class="form-select form-select-sm fw-bold text-secondary">
+          <select v-model.number="localData.limit" class="form-select form-select-sm fw-bold text-secondary">
+            <option :value="0">Sin límite (Mostrar todos)</option>
             <option :value="4">4 Aliados</option>
             <option :value="8">8 Aliados</option>
             <option :value="12">12 Aliados</option>
             <option :value="24">24 Aliados</option>
             <option :value="50">50 Aliados</option>
+            <option :value="100">100 Aliados</option>
           </select>
           <span class="x-small text-muted d-block mt-1">Regula cuántas marcas de aliados cargará la consulta de Fastify antes de realizar los filtros point-and-click.</span>
         </div>

@@ -6,19 +6,20 @@ const emit = defineEmits(['update:modelValue']);
 
 const localData = ref({
   title: props.modelValue?.title || 'Asambleas Generales',
-  limit: props.modelValue?.limit || 6,
+  limit: props.modelValue?.limit !== undefined && props.modelValue?.limit !== '' ? Number(props.modelValue.limit) : 6,
   postType: props.modelValue?.postType || 'assemblies' // Forzado internamente a assemblies
 });
 
 // Sincronizador defensivo de estados de la barra de administración
 watch(() => props.modelValue, (newVal) => {
   if (!newVal) return;
-  if (JSON.stringify(newVal) !== JSON.stringify(localData.value)) {
-    localData.value = {
-      title: newVal.title || 'Asambleas Generales',
-      limit: newVal.limit || 6,
-      postType: newVal.postType || 'assemblies'
-    };
+  const incoming = {
+    title: newVal.title || 'Asambleas Generales',
+    limit: newVal.limit !== undefined && newVal.limit !== '' ? Number(newVal.limit) : 6,
+    postType: newVal.postType || 'assemblies'
+  };
+  if (JSON.stringify(incoming) !== JSON.stringify(localData.value)) {
+    localData.value = incoming;
   }
 }, { deep: true });
 
@@ -50,12 +51,15 @@ watch(localData, (newVal) => {
         
         <div class="mb-3">
           <label class="small text-muted mb-1 fw-bold">Límite de Registros a Traer</label>
-          <select v-model="localData.limit" class="form-select form-select-sm fw-bold text-secondary">
+          <select v-model.number="localData.limit" class="form-select form-select-sm fw-bold text-secondary">
+            <option :value="0">Sin límite (Mostrar todas)</option>
             <option :value="2">2 Actas</option>
             <option :value="4">4 Actas</option>
             <option :value="6">6 Actas</option>
             <option :value="8">8 Actas</option>
             <option :value="12">12 Actas</option>
+            <option :value="24">24 Actas</option>
+            <option :value="50">50 Actas</option>
           </select>
           <span class="x-small text-muted d-block mt-1">Controla la cantidad máxima de asambleas que Fastify traerá en el feed.</span>
         </div>
